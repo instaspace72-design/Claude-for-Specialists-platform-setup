@@ -56,41 +56,24 @@ function StreamingText({ text, onDone }){
   return <span>{shown}</span>;
 }
 
-/* Build the mentor system prompt from the exercise / practice content. */
-function buildSystemPrompt(course, lesson, ex){
-  const criteria = (ex.success || []).map((s, i) => `${i + 1}. ${s}`).join('\n');
-  const records = (ex.records || []).map(r => `- ${r.title}: ${r.meta}`).join('\n');
-  const brief = ex.brief || ex.scenario || '';
-  const promptBlock = ex.promptTemplate ? `\nThe learner has this starter prompt to run and refine:\n"""\n${ex.promptTemplate}\n"""\n` : '';
-  const taskBlock = (ex.task && ex.task.length) ? `\nTheir task:\n${ex.task.map((s, i) => `${i + 1}. ${s}`).join('\n')}\n` : '';
-  return [
-    `You are a warm, precise mentor inside the InstaSpace "Claude for Specialists" learning portal, guiding a learner through a hands on exercise. Stay in character as their mentor.`,
-    ``,
-    `Course: ${course.title}`,
-    lesson ? `Lesson: ${lesson.title}` : ``,
-    `Exercise: ${ex.title}`,
-    brief ? `What they are doing: ${brief}` : ``,
-    promptBlock,
-    taskBlock,
-    `They succeed when:`,
-    criteria,
-    ``,
-    records ? `Reference records they can use:\n${records}\n` : ``,
-    `Coaching rules:`,
-    `- Guide with short, concrete steps. Ask one focused question at a time.`,
-    `- Help them run and sharpen the starter prompt against InstaSpace's real context. Do not just hand over the finished answer.`,
-    `- Keep every reply under 90 words.`,
-    `- When the learner has met the success criteria, tell them plainly they are ready to submit.`,
-    `- Never use dashes as punctuation. Use commas or periods. Write compound terms as separate words.`,
-  ].filter(Boolean).join('\n');
-}
-
 function Exercise({ course, lesson, practice, backToLesson, onComplete }){
   const ex = practice || course.exercise;
   const brief = ex.brief || ex.scenario || '';
   const records = ex.records || [];
   const task = ex.task || [];
-  const system = buildSystemPrompt(course, lesson, ex);
+  // Structured exercise context; the server builds the mentor prompt from it,
+  // adding InstaSpace product ground truth and the learner's real history.
+  const exerciseContext = {
+    courseTitle: course.title,
+    lessonTitle: lesson && lesson.title,
+    exerciseTitle: ex.title,
+    instructor: course.instructor,
+    brief,
+    promptTemplate: ex.promptTemplate || '',
+    task,
+    success: ex.success || [],
+    records: records.map(r => ({ title: r.title, meta: r.meta })),
+  };
 
   const [msgs, setMsgs] = useState([]);         // displayed bubbles: {role:'claude'|'user', text, stream?, error?}
   const [typing, setTyping] = useState(false);
@@ -109,10 +92,9 @@ function Exercise({ course, lesson, practice, backToLesson, onComplete }){
   async function ask(){
     setTyping(true);
     try {
-      const res = await fetch(`${API_BASE}/api/chat`, {
+      const res = await window.authFetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ studentId: currentStudentId(), exerciseId: ex.id, system, messages: historyRef.current }),
+        body: JSON.stringify({ exerciseId: ex.id, exercise: exerciseContext, messages: historyRef.current }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok){
@@ -120,7 +102,12 @@ function Exercise({ course, lesson, practice, backToLesson, onComplete }){
       }
       const reply = data.text || '(empty response)';
       historyRef.current.push({ role: 'assistant', content: reply });
-      setMsgs(m => [...m, { role: 'claude', text: reply, stream: true }]);
+      setMsgs(m => {
+        const next = [...m];
+        (data.toolEvents || []).forEach(ev => next.push({ role: 'tool', text: ev.label }));
+        next.push({ role: 'claude', text: reply, stream: true });
+        return next;
+      });
     } catch (err) {
       const offline = /Failed to fetch|NetworkError/i.test(err.message);
       const text = offline
@@ -296,11 +283,18 @@ function Exercise({ course, lesson, practice, backToLesson, onComplete }){
           <div ref={scrollRef} className="scroll" style={{ flex:1, padding:'26px 30px', display:'flex', flexDirection:'column', gap:16 }}>
             <div className="mono c35" style={{ fontSize:11, letterSpacing:'.1em', textAlign:'center', marginBottom:4 }}>LIVE PRACTICE SESSION · CLAUDE</div>
             {msgs.map((m,i) => (
-              <Bubble key={i} role={m.role} error={m.error}>
-                {m.stream && i === msgs.length-1 && !m.streamed
-                  ? <StreamingText text={m.text} onDone={() => { m.streamed = true; if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }} />
-                  : m.text}
-              </Bubble>
+              m.role === 'tool' ? (
+                <div key={i} className="mono" style={{ textAlign:'center', fontSize:11, letterSpacing:'.1em', color:'var(--accent)',
+                  padding:'4px 0', animation:'fadein .3s var(--ease) both' }}>
+                  ⚙ {m.text.toUpperCase()}
+                </div>
+              ) : (
+                <Bubble key={i} role={m.role} error={m.error}>
+                  {m.stream && i === msgs.length-1 && !m.streamed
+                    ? <StreamingText text={m.text} onDone={() => { m.streamed = true; if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }} />
+                    : m.text}
+                </Bubble>
+              )
             ))}
             {typing && (
               <div style={{ display:'flex', gap:10, alignItems:'flex-end' }}>
