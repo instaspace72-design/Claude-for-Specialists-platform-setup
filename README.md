@@ -109,4 +109,28 @@ live progress dashboard is the next build). Override the default with
 `DEFAULT_PASSWORD` in `.env` before first boot. To re-provision from scratch,
 delete the `users` and `sessions` rows (or `local.db`) and restart the backend.
 
-See `docs/DEVELOPER_SETUP_GUIDE.md` for the full walkthrough and deployment.
+## Deploy (Render, single service)
+
+In production the Express server also serves the frontend, so the whole app is
+**one web service**. The frontend calls the API on the same origin, so there is
+nothing else to configure.
+
+1. Push this repo to GitHub.
+2. In Render: **New → Blueprint**, connect the repo. Render reads `render.yaml`.
+3. Fill in the secret env vars it prompts for: `AIRTABLE_API_KEY`,
+   `AIRTABLE_BASE_ID` (same values as your local `.env`), and optionally
+   `CLAUDE_API_KEY` (enables live practice chat).
+4. Keep the persistent disk (mounted at `/data`, with `DB_PATH=/data/local.db`)
+   so the accounts database survives deploys. The disk needs a paid Starter
+   plan; on the free plan SQLite resets on each restart (accounts re-seed to the
+   defaults and progress is lost).
+5. Deploy. Health check is `GET /api/health`. On first boot the 7 accounts are
+   seeded with the default password.
+
+To run the single-service build locally exactly as production does:
+
+```bash
+npm start                 # backend serves API + frontend on http://localhost:3001
+```
+
+See `docs/DEVELOPER_SETUP_GUIDE.md` for the full walkthrough.
