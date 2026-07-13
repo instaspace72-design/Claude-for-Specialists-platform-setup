@@ -168,21 +168,21 @@ const SEED_USERS = [
 ];
 
 function seedUsers() {
-  db.get('SELECT COUNT(*) AS n FROM users', (err, row) => {
-    if (err) return console.error('[seed] count error:', err.message);
-    if (row && row.n > 0) return; // already provisioned
-    const stmt = db.prepare(
-      `INSERT INTO users (email, name, first_name, role, title, track, salt, password_hash, must_change_password)
-       VALUES (?,?,?,?,?,?,?,?,1)`
-    );
-    for (const u of SEED_USERS) {
-      const { salt, hash } = hashPassword(DEFAULT_PASSWORD);
-      stmt.run(u.email, u.name, u.first, u.role, u.title, u.track, salt, hash);
-    }
-    stmt.finalize((e) => {
-      if (e) console.error('[seed] insert error:', e.message);
-      else console.log(`[seed] provisioned ${SEED_USERS.length} accounts (default password: ${DEFAULT_PASSWORD})`);
-    });
+  // Idempotent and additive: ensure every seed account exists on each boot.
+  // INSERT OR IGNORE keys on the unique email, so existing users (and any
+  // password they have already changed) are left untouched, while a newly
+  // added seed account appears on the next deploy without wiping the database.
+  const stmt = db.prepare(
+    `INSERT OR IGNORE INTO users (email, name, first_name, role, title, track, salt, password_hash, must_change_password)
+     VALUES (?,?,?,?,?,?,?,?,1)`
+  );
+  for (const u of SEED_USERS) {
+    const { salt, hash } = hashPassword(DEFAULT_PASSWORD);
+    stmt.run(u.email, u.name, u.first, u.role, u.title, u.track, salt, hash);
+  }
+  stmt.finalize((e) => {
+    if (e) console.error('[seed] error:', e.message);
+    else console.log(`[seed] ensured ${SEED_USERS.length} accounts (default password: ${DEFAULT_PASSWORD})`);
   });
 }
 
