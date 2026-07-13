@@ -1,9 +1,12 @@
 /* Progress / achievements screen */
 
-function Progress({ course, pct, streak, exercisesPassed, onViewCertificate }){
+function Progress({ course, pct, streak, exercisesPassed, minutes, activeDays, onViewCertificate }){
   const doneCount = course.lessons.filter(l => l.status === 'done').length;
   const passed = exercisesPassed || 0;
   const courseCleared = pct >= 100;
+  // Real last 7 days from the server; falls back to an empty week before load.
+  const week = (activeDays && activeDays.length === 7) ? activeDays
+    : Array.from({ length: 7 }, () => ({ weekday: '·', active: false }));
   // Badges are earned from real progress, not pre-filled.
   const earnedMap = {
     'first-lesson': doneCount >= 1,
@@ -15,8 +18,6 @@ function Progress({ course, pct, streak, exercisesPassed, onViewCertificate }){
   };
   const achievements = window.ACHIEVEMENTS.map(a => ({ ...a, earned: !!earnedMap[a.id] }));
   const earned = achievements.filter(a => a.earned).length;
-  const days = ['M','T','W','T','F','S','S'];
-  const streakDays = days.map((_, i) => i < streak);
 
   return (
     <div className="screen scroll" style={{ padding:'44px 52px', height:'100%' }}>
@@ -73,20 +74,25 @@ function Progress({ course, pct, streak, exercisesPassed, onViewCertificate }){
                   <CountUp to={streak} /> <span style={{ fontSize:20, color:'var(--cream)' }}>days</span>
                 </div>
               </div>
-              <div className="pill" style={{ background:'rgba(242,98,46,.14)', color:'var(--accent)' }}>Personal best</div>
+              <div className="pill" style={{ background:'rgba(242,98,46,.14)', color:'var(--accent)' }}>
+                {minutes || 0} active min total
+              </div>
             </div>
             <div style={{ display:'flex', gap:10, marginTop:24 }}>
-              {days.map((d,i) => (
+              {week.map((d,i) => (
                 <div key={i} style={{ flex:1, textAlign:'center' }}>
                   <div style={{ height:46, borderRadius:'var(--r-md)', display:'flex', alignItems:'flex-end', justifyContent:'center',
-                    background: streakDays[i] ? 'var(--accent-grad)' : 'var(--aubergine-deep)',
+                    background: d.active ? 'var(--accent-grad)' : 'var(--aubergine-deep)',
                     border:'1px solid rgba(245,239,232,.08)',
-                    animation: streakDays[i] ? `rise .5s var(--ease) ${.3+i*0.06}s both` : 'none' }}>
-                    {streakDays[i] && <span style={{ color:'var(--aubergine)', fontWeight:900, fontSize:16, marginBottom:6 }}>✓</span>}
+                    animation: d.active ? `rise .5s var(--ease) ${.3+i*0.06}s both` : 'none' }}>
+                    {d.active && <span style={{ color:'var(--aubergine)', fontWeight:900, fontSize:16, marginBottom:6 }}>✓</span>}
                   </div>
-                  <div className="mono c50" style={{ fontSize:11, marginTop:6 }}>{d}</div>
+                  <div className="mono c50" style={{ fontSize:11, marginTop:6 }}>{d.weekday}</div>
                 </div>
               ))}
+            </div>
+            <div className="mono c35" style={{ fontSize:10.5, letterSpacing:'.08em', marginTop:12, textAlign:'center' }}>
+              Last 7 days · a day counts when you actually worked in the portal
             </div>
           </div>
         </div>

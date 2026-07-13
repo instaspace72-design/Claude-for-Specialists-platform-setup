@@ -97,6 +97,8 @@ function Exercise({ course, lesson, practice, backToLesson, onComplete }){
   const [input, setInput] = useState('');
   const [userTurns, setUserTurns] = useState(0);
   const [done, setDone] = useState(false);
+  const [grading, setGrading] = useState(false);
+  const [grade, setGrade] = useState(null);     // {passed, criteria:[{criterion,pass,reason}], feedback}
   const historyRef = useRef([]);                // true API history: {role:'user'|'assistant', content}
   const scrollRef = useRef(null);
   const startedRef = useRef(false);
@@ -152,17 +154,51 @@ function Exercise({ course, lesson, practice, backToLesson, onComplete }){
     ask();
   };
 
+  // Real grading: a strict second Claude pass judges the transcript against
+  // the success criteria. Pass only when every criterion is met.
   const submit = async () => {
-    const solution = historyRef.current.filter(m => m.role === 'user').slice(1).map(m => m.content).join('\n\n');
+    if (grading || typing) return;
+    setGrading(true);
     try {
-      await fetch(`${API_BASE}/api/submissions`, {
+      const res = await window.authFetch('/api/grade', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ studentId: currentStudentId(), exerciseId: ex.id || (lesson && lesson.id) || 'practice', content: solution, passed: true }),
+        body: JSON.stringify({
+          exerciseId: ex.id || (lesson && lesson.id) || 'practice',
+          context: {
+            courseTitle: course.title,
+            lessonTitle: lesson && lesson.title,
+            exerciseTitle: ex.title,
+            brief,
+            criteria: ex.success || [],
+          },
+          transcript: historyRef.current,
+        }),
       });
-    } catch (e) { /* best effort */ }
-    setDone(true);
-    onComplete && onComplete();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.hint || data.error || `Grading failed (${res.status})`);
+      setGrade(data);
+      if (data.passed){
+        setDone(true);
+        onComplete && onComplete();
+      } else {
+        const failed = (data.criteria || []).filter(c => !c.pass);
+        const text = [
+          `Not yet. ${data.feedback || 'Some criteria are not met.'}`,
+          '',
+          ...failed.map(c => `✗ ${c.criterion}${c.reason ? ` , ${c.reason}` : ''}`),
+          '',
+          'Revise your work in the chat, then submit again.',
+        ].join('\n');
+        setMsgs(m => [...m, { role: 'claude', text }]);
+      }
+    } catch (err) {
+      const offline = /Failed to fetch|NetworkError/i.test(err.message);
+      setMsgs(m => [...m, { role: 'claude', error: true, text: offline
+        ? 'Cannot reach the backend on port 3001, so your work cannot be graded yet.'
+        : `Grading is unavailable. ${err.message}` }]);
+    } finally {
+      setGrading(false);
+    }
   };
 
   return (
@@ -227,16 +263,28 @@ function Exercise({ course, lesson, practice, backToLesson, onComplete }){
             </React.Fragment>
           )}
 
-          <div className="eyebrow reveal" style={{ animationDelay:'.3s', margin:'26px 0 12px' }}>Success Criteria</div>
+          <div className="eyebrow reveal" style={{ animationDelay:'.3s', margin:'26px 0 12px' }}>
+            Success Criteria {grade ? '· graded' : '· graded on submit'}
+          </div>
           <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
             {ex.success.map((s,i) => {
-              const checked = userTurns > i;
+              const g = grade && grade.criteria && grade.criteria[i];
+              const state = g ? (g.pass ? 'pass' : 'fail') : 'pending';
               return (
-                <div key={i} className="reveal" style={{ animationDelay:`${.34+i*0.05}s`, display:'flex', gap:11, alignItems:'center' }}>
-                  <span style={{ width:20, height:20, borderRadius:'50%', flexShrink:0, transition:'all .3s var(--ease)',
-                    background: checked ? 'var(--accent)' : 'transparent', border:`2px solid ${checked?'var(--accent)':'rgba(245,239,232,.25)'}`,
-                    display:'flex', alignItems:'center', justifyContent:'center', color:'var(--aubergine)', fontSize:11, fontWeight:900 }}>{checked?'✓':''}</span>
-                  <span className="c82" style={{ fontSize:14, fontWeight:500 }}>{s}</span>
+                <div key={i} className="reveal" style={{ animationDelay:`${.34+i*0.05}s`, display:'flex', gap:11, alignItems:'flex-start' }}>
+                  <span style={{ width:20, height:20, borderRadius:'50%', flexShrink:0, transition:'all .3s var(--ease)', marginTop:1,
+                    background: state==='pass' ? 'var(--accent)' : 'transparent',
+                    border:`2px solid ${state==='pass' ? 'var(--accent)' : state==='fail' ? 'var(--crimson)' : 'rgba(245,239,232,.25)'}`,
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    color: state==='pass' ? 'var(--aubergine)' : 'var(--crimson)', fontSize:11, fontWeight:900 }}>
+                    {state==='pass' ? '✓' : state==='fail' ? '✗' : ''}
+                  </span>
+                  <span style={{ minWidth:0 }}>
+                    <span className="c82" style={{ fontSize:14, fontWeight:500, display:'block' }}>{s}</span>
+                    {state==='fail' && g.reason && (
+                      <span style={{ fontSize:12, color:'var(--crimson)', display:'block', marginTop:3, lineHeight:1.45 }}>{g.reason}</span>
+                    )}
+                  </span>
                 </div>
               );
             })}
@@ -264,10 +312,18 @@ function Exercise({ course, lesson, practice, backToLesson, onComplete }){
 
           {/* composer */}
           <div style={{ padding:'16px 24px 20px', borderTop:'1px solid rgba(245,239,232,.08)' }}>
-            {canSubmit && (
-              <div className="reveal" style={{ marginBottom:12, display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderRadius:'var(--r-md)', background:'rgba(31,138,91,.14)', border:'1px solid rgba(31,138,91,.3)' }}>
-                <span style={{ color:'#4fd18b', fontSize:16 }}>✓</span>
-                <span className="c82" style={{ fontSize:13, fontWeight:600 }}>Keep refining with Claude, or submit your solution when you are ready.</span>
+            {canSubmit && !grade && (
+              <div className="reveal" style={{ marginBottom:12, display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderRadius:'var(--r-md)', background:'rgba(245,239,232,.05)', border:'1px solid rgba(245,239,232,.14)' }}>
+                <span style={{ color:'var(--accent)', fontSize:16 }}>i</span>
+                <span className="c82" style={{ fontSize:13, fontWeight:600 }}>When you believe your work meets every success criterion, submit it for grading. Claude grades strictly.</span>
+              </div>
+            )}
+            {grade && !grade.passed && (
+              <div className="reveal" style={{ marginBottom:12, display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderRadius:'var(--r-md)', background:'rgba(209,30,76,.12)', border:'1px solid rgba(209,30,76,.35)' }}>
+                <span style={{ color:'var(--crimson)', fontSize:16, fontWeight:900 }}>!</span>
+                <span className="c82" style={{ fontSize:13, fontWeight:600 }}>
+                  {grade.criteria.filter(c=>c.pass).length} of {grade.criteria.length} criteria met. Fix the failed ones and resubmit.
+                </span>
               </div>
             )}
             <div style={{ display:'flex', gap:12, alignItems:'flex-end' }}>
@@ -277,40 +333,63 @@ function Exercise({ course, lesson, practice, backToLesson, onComplete }){
                 style={{ flex:1, resize:'none', background:'var(--ground)', border:'1px solid rgba(245,239,232,.14)', borderRadius:'var(--r-md)',
                   color:'var(--cream)', padding:'13px 16px', fontSize:15, outline:'none', maxHeight:120, fontFamily:'var(--sans)' }}
                 onFocus={e=>e.target.style.borderColor='var(--accent)'} onBlur={e=>e.target.style.borderColor='rgba(245,239,232,.14)'} />
-              <button className="btn btn-primary" onClick={send} disabled={typing || !input.trim()} style={{ opacity:(typing||!input.trim())?.4:1 }}>Send</button>
+              <button className="btn btn-primary" onClick={send} disabled={typing || grading || !input.trim()} style={{ opacity:(typing||grading||!input.trim())?.4:1 }}>Send</button>
               {canSubmit && (
-                <button className="btn btn-primary" onClick={submit} style={{ animation:'glowPulse 2.4s ease-in-out infinite' }}>Submit</button>
+                <button className="btn btn-primary" onClick={submit} disabled={grading || typing}
+                  style={{ opacity: grading || typing ? .5 : 1, animation: grading ? 'none' : 'glowPulse 2.4s ease-in-out infinite', whiteSpace:'nowrap' }}>
+                  {grading ? 'Grading…' : grade && !grade.passed ? 'Resubmit' : 'Submit for grading'}
+                </button>
               )}
             </div>
           </div>
         </div>
       </div>
 
-      {done && <SuccessOverlay reward={ex.reward} onNext={backToLesson} />}
+      {done && <SuccessOverlay reward={ex.reward} grade={grade} onNext={backToLesson} />}
     </div>
   );
 }
 
-function SuccessOverlay({ reward, onNext }){
+function SuccessOverlay({ reward, grade, onNext }){
   reward = reward || { badge:'Exercise', note:'Nicely done.' };
   const colors = ['#F2622E','#D11E4C','#F5EFE8','#4fd18b'];
   const pieces = Array.from({length:28});
+  const criteria = (grade && grade.criteria) || [];
   return (
-    <div style={{ position:'absolute', inset:0, zIndex:40, background:'rgba(18,8,34,.86)', backdropFilter:'blur(6px)',
-      display:'flex', alignItems:'center', justifyContent:'center', animation:'fadein .3s ease both' }}>
+    <div className="scroll" style={{ position:'absolute', inset:0, zIndex:40, background:'rgba(18,8,34,.9)', backdropFilter:'blur(6px)',
+      display:'flex', alignItems:'center', justifyContent:'center', animation:'fadein .3s ease both', padding:'30px' }}>
       {getMo() > 0 && pieces.map((_,i) => (
-        <span key={i} style={{ position:'absolute', top:'34%', left:`${50 + (Math.random()*50-25)}%`,
+        <span key={i} style={{ position:'absolute', top:'30%', left:`${50 + (Math.random()*50-25)}%`,
           width:8, height:12, background:colors[i%colors.length], borderRadius:2,
           animation:`confettiFall ${1.1+Math.random()*0.8}s var(--ease) ${Math.random()*0.3}s both` }} />
       ))}
-      <div style={{ textAlign:'center', animation:'pop .5s var(--ease) both', position:'relative' }}>
-        <div style={{ width:96, height:96, borderRadius:'50%', margin:'0 auto 24px', background:'var(--accent-grad)',
+      <div style={{ textAlign:'center', animation:'pop .5s var(--ease) both', position:'relative', maxWidth:520 }}>
+        <div style={{ width:88, height:88, borderRadius:'50%', margin:'0 auto 20px', background:'var(--accent-grad)',
           display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 20px 60px -12px rgba(242,98,46,.7)' }}>
-          <span style={{ fontSize:44, color:'var(--aubergine)' }}>✓</span>
+          <span style={{ fontSize:40, color:'var(--aubergine)' }}>✓</span>
         </div>
-        <div className="eyebrow" style={{ color:'var(--accent)' }}>Exercise passed · Grade A</div>
-        <h2 style={{ fontWeight:900, fontSize:34, letterSpacing:'-0.03em', margin:'10px 0 8px' }}>{reward.badge} unlocked.</h2>
-        <p className="c70" style={{ fontSize:16, fontWeight:500, maxWidth:380, margin:'0 auto 26px' }}>
+        <div className="eyebrow" style={{ color:'var(--accent)' }}>
+          Graded and passed · {criteria.length ? `${criteria.filter(c=>c.pass).length} of ${criteria.length} criteria met` : 'All criteria met'}
+        </div>
+        <h2 style={{ fontWeight:900, fontSize:32, letterSpacing:'-0.03em', margin:'10px 0 8px' }}>{reward.badge} unlocked.</h2>
+        {grade && grade.feedback && (
+          <p className="c82" style={{ fontSize:15, fontWeight:500, margin:'0 auto 16px', lineHeight:1.55, textAlign:'left',
+            background:'var(--aubergine-lift)', border:'1px solid rgba(245,239,232,.1)', borderRadius:'var(--r-md)', padding:'14px 18px' }}>
+            <span className="eyebrow" style={{ display:'block', marginBottom:6, color:'var(--accent)' }}>Grader feedback</span>
+            {grade.feedback}
+          </p>
+        )}
+        {criteria.length > 0 && (
+          <div style={{ textAlign:'left', margin:'0 auto 18px', display:'flex', flexDirection:'column', gap:7 }}>
+            {criteria.map((c,i) => (
+              <div key={i} style={{ display:'flex', gap:9, alignItems:'flex-start' }}>
+                <span style={{ color:'#4fd18b', fontWeight:900, fontSize:13, marginTop:1 }}>✓</span>
+                <span className="c70" style={{ fontSize:13, fontWeight:500, lineHeight:1.45 }}>{c.criterion}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        <p className="c70" style={{ fontSize:15, fontWeight:500, maxWidth:400, margin:'0 auto 24px' }}>
           {reward.note}
         </p>
         <button className="btn btn-primary" onClick={onNext} style={{ fontSize:16, padding:'14px 32px' }}>Continue <span>→</span></button>

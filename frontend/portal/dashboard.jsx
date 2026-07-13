@@ -10,10 +10,9 @@ function StatCard({ label, value, suffix, delay }){
   );
 }
 
-function Dashboard({ dept, course, pct, streak, exercisesPassed, go, resumeLesson, switchTrack, user }){
+function Dashboard({ dept, course, pct, streak, exercisesPassed, minutes, go, resumeLesson, switchTrack, user }){
   const nextLesson = course.lessons.find(l => l.status === 'active') || course.lessons[0];
   const doneCount = course.lessons.filter(l => l.status === 'done').length;
-  const minutesLearned = course.lessons.filter(l => l.status === 'done').reduce((sum, l) => sum + (l.mins || 0), 0);
   const firstName = (user && user.firstName) || 'there';
 
   return (
@@ -54,7 +53,7 @@ function Dashboard({ dept, course, pct, streak, exercisesPassed, go, resumeLesso
         <div className="stagger" style={{ display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:16, marginTop:20 }}>
           <StatCard label="Day Streak" value={streak} delay=".2s" />
           <StatCard label="Lessons Done" value={doneCount} delay=".26s" />
-          <StatCard label="Minutes Learned" value={minutesLearned} delay=".32s" />
+          <StatCard label="Active Minutes" value={minutes || 0} delay=".32s" />
           <StatCard label="Exercises Passed" value={exercisesPassed} delay=".38s" />
         </div>
 

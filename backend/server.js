@@ -147,6 +147,37 @@ db.serialize(() => {
     body TEXT NOT NULL,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`);
+
+  // Real lesson completion, persisted per student. This is the single source of
+  // truth for course progress; the frontend derives lesson statuses from it.
+  db.run(`CREATE TABLE IF NOT EXISTS lesson_completions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id TEXT NOT NULL,
+    course_id TEXT,
+    lesson_id TEXT NOT NULL,
+    completed_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(student_id, lesson_id)
+  )`);
+
+  // Real time on task. The frontend starts a session when a lesson or exercise
+  // opens and pings every 30s while the tab is visible. active_ms accumulates
+  // only pings that arrive within the expected window, so idle time never counts.
+  db.run(`CREATE TABLE IF NOT EXISTS learn_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id TEXT NOT NULL,
+    course_id TEXT,
+    lesson_id TEXT,
+    screen TEXT,
+    started_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    last_ping_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    ended_at TEXT,
+    active_ms INTEGER DEFAULT 0
+  )`);
+
+  // Additive migrations: grading detail on submissions (ignore "duplicate
+  // column" errors on databases that already have them).
+  db.run(`ALTER TABLE exercise_submissions ADD COLUMN grade_json TEXT`, () => {});
+  db.run(`ALTER TABLE exercise_submissions ADD COLUMN feedback TEXT`, () => {});
 });
 
 // ---------------------------------------------------------------------------
@@ -244,6 +275,52 @@ app.use(
 
 // small helper to map an Airtable record to a plain object
 const rec = (r) => ({ id: r.id, ...r.fields });
+
+// promisified sqlite helpers so multi-query endpoints stay readable
+const dbAll = (sql, params = []) => new Promise((resolve, reject) => db.all(sql, params, (e, r) => (e ? reject(e) : resolve(r || []))));
+const dbGet = (sql, params = []) => new Promise((resolve, reject) => db.get(sql, params, (e, r) => (e ? reject(e) : resolve(r))));
+const dbRun = (sql, params = []) => new Promise((resolve, reject) => db.run(sql, params, function (e) { e ? reject(e) : resolve(this); }));
+
+// ---------------------------------------------------------------------------
+// Real activity + streak (UTC days). A day counts when the student had a learn
+// session, a submission, or a lesson completion. The streak is the consecutive
+// run of active days ending today, or yesterday if today has no activity yet.
+// ---------------------------------------------------------------------------
+const ACTIVITY_DATES_SQL = `
+  SELECT DISTINCT date(started_at) AS d FROM learn_sessions WHERE student_id = ?
+  UNION SELECT DISTINCT date(submitted_at) FROM exercise_submissions WHERE student_id = ?
+  UNION SELECT DISTINCT date(completed_at) FROM lesson_completions WHERE student_id = ?`;
+
+const utcDay = (offset) => {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() - offset);
+  return d.toISOString().slice(0, 10);
+};
+
+function computeStreak(dates) {
+  const set = new Set(dates);
+  const anchor = set.has(utcDay(0)) ? 0 : 1; // streak survives until end of day
+  let streak = 0;
+  while (set.has(utcDay(anchor + streak))) streak++;
+  return streak;
+}
+
+function lastSevenDays(dates) {
+  const set = new Set(dates);
+  const names = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const out = [];
+  for (let offset = 6; offset >= 0; offset--) {
+    const date = utcDay(offset);
+    out.push({ date, weekday: names[new Date(date + 'T00:00:00Z').getUTCDay()], active: set.has(date) });
+  }
+  return out;
+}
+
+async function studentActivity(studentId) {
+  const rows = await dbAll(ACTIVITY_DATES_SQL, [studentId, studentId, studentId]);
+  const dates = rows.map((r) => r.d).filter(Boolean);
+  return { streak: computeStreak(dates), activeDays: lastSevenDays(dates) };
+}
 
 // ---------------------------------------------------------------------------
 // Auth (token in the Authorization: Bearer header, sessions in SQLite)
@@ -557,6 +634,31 @@ app.post('/api/chat', async (req, res) => {
 // ---------------------------------------------------------------------------
 // Progress + submissions (SQLite)
 // ---------------------------------------------------------------------------
+// Real progress for the signed in student, read on every page load. Must be
+// registered before /api/progress/:studentId or that route swallows "me".
+app.get('/api/progress/me', requireAuth, async (req, res) => {
+  const email = req.user.email;
+  try {
+    const [completions, sub, total, week, activity] = await Promise.all([
+      dbAll('SELECT lesson_id, course_id, completed_at FROM lesson_completions WHERE student_id = ? ORDER BY completed_at', [email]),
+      dbGet('SELECT COUNT(*) AS passed FROM exercise_submissions WHERE student_id = ? AND passed = 1', [email]),
+      dbGet('SELECT COALESCE(SUM(active_ms),0) AS ms FROM learn_sessions WHERE student_id = ?', [email]),
+      dbGet("SELECT COALESCE(SUM(active_ms),0) AS ms FROM learn_sessions WHERE student_id = ? AND started_at >= datetime('now','-7 days')", [email]),
+      studentActivity(email),
+    ]);
+    res.json({
+      completions,
+      exercisesPassed: (sub && sub.passed) || 0,
+      activeMinutesTotal: Math.round(((total && total.ms) || 0) / 60000),
+      activeMinutes7d: Math.round(((week && week.ms) || 0) / 60000),
+      streak: activity.streak,
+      activeDays: activity.activeDays,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/progress/:studentId', (req, res) => {
   db.all('SELECT * FROM student_progress WHERE student_id = ?', [req.params.studentId], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -614,59 +716,191 @@ app.post('/api/submissions', (req, res) => {
 // ---------------------------------------------------------------------------
 // Leadership overview: live per-intern progress for CEO / COO / CPO
 // ---------------------------------------------------------------------------
-app.get('/api/leadership/overview', requireAuth, (req, res) => {
+app.get('/api/leadership/overview', requireAuth, async (req, res) => {
   if (req.user.role !== 'leadership') {
     return res.status(403).json({ error: 'Leadership access only' });
   }
-
-  db.all("SELECT email, name, first_name, title, track FROM users WHERE role = 'intern' ORDER BY name", [], (err, interns) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (!interns.length) return res.json({ interns: [], summary: { total: 0, active: 0, notStarted: 0, exercisesPassed: 0, avgCompletion: 0 } });
-
-    const order = interns.map((i) => i.email);
+  try {
+    const interns = await dbAll("SELECT email, name, first_name, title, track FROM users WHERE role = 'intern' ORDER BY name");
     const rows = [];
-    let pending = interns.length;
-
-    interns.forEach((it) => {
-      db.get('SELECT COUNT(*) AS passed FROM exercise_submissions WHERE student_id = ? AND passed = 1', [it.email], (e1, sub) => {
-        db.get(
-          `SELECT MAX(completion_percentage) AS pct, MAX(streak_days) AS streak,
-                  MAX(current_lesson) AS lesson, MAX(last_active) AS last
-             FROM student_progress WHERE student_id = ?`,
-          [it.email],
-          (e2, prog) => {
-            const passed = (sub && sub.passed) || 0;
-            const pct = (prog && prog.pct) || 0;
-            const streak = (prog && prog.streak) || 0;
-            rows.push({
-              email: it.email,
-              name: it.name,
-              firstName: it.first_name,
-              title: it.title,
-              track: it.track,
-              exercisesPassed: passed,
-              completion: pct,
-              streak,
-              lastActive: (prog && prog.last) || null,
-              status: passed > 0 || pct > 0 ? 'Active' : 'Not started',
-            });
-            if (--pending === 0) finalize();
-          }
-        );
-      });
-    });
-
-    function finalize() {
-      rows.sort((a, b) => order.indexOf(a.email) - order.indexOf(b.email));
-      const active = rows.filter((r) => r.status === 'Active').length;
-      const exercisesPassed = rows.reduce((a, r) => a + r.exercisesPassed, 0);
-      const avgCompletion = rows.length ? Math.round(rows.reduce((a, r) => a + r.completion, 0) / rows.length) : 0;
-      res.json({
-        interns: rows,
-        summary: { total: rows.length, active, notStarted: rows.length - active, exercisesPassed, avgCompletion },
+    for (const it of interns) {
+      const [sub, prog, week, total, lastSession, activity] = await Promise.all([
+        dbGet('SELECT COUNT(*) AS passed FROM exercise_submissions WHERE student_id = ? AND passed = 1', [it.email]),
+        dbGet('SELECT MAX(completion_percentage) AS pct, MAX(current_lesson) AS lesson, MAX(last_active) AS last FROM student_progress WHERE student_id = ?', [it.email]),
+        dbGet("SELECT COALESCE(SUM(active_ms),0) AS ms FROM learn_sessions WHERE student_id = ? AND started_at >= datetime('now','-7 days')", [it.email]),
+        dbGet('SELECT COALESCE(SUM(active_ms),0) AS ms FROM learn_sessions WHERE student_id = ?', [it.email]),
+        dbGet('SELECT MAX(last_ping_at) AS last FROM learn_sessions WHERE student_id = ?', [it.email]),
+        studentActivity(it.email),
+      ]);
+      const passed = (sub && sub.passed) || 0;
+      const pct = (prog && prog.pct) || 0;
+      const weekMs = (week && week.ms) || 0;
+      const lastActive = [(prog && prog.last) || null, (lastSession && lastSession.last) || null]
+        .filter(Boolean).sort().pop() || null;
+      rows.push({
+        email: it.email,
+        name: it.name,
+        firstName: it.first_name,
+        title: it.title,
+        track: it.track,
+        exercisesPassed: passed,
+        completion: pct,
+        streak: activity.streak,
+        activeMinutes7d: Math.round(weekMs / 60000),
+        activeMinutesTotal: Math.round((((total && total.ms) || 0)) / 60000),
+        lastActive,
+        status: passed > 0 || pct > 0 || weekMs > 0 ? 'Active' : 'Not started',
       });
     }
-  });
+    const active = rows.filter((r) => r.status === 'Active').length;
+    const exercisesPassed = rows.reduce((a, r) => a + r.exercisesPassed, 0);
+    const avgCompletion = rows.length ? Math.round(rows.reduce((a, r) => a + r.completion, 0) / rows.length) : 0;
+    res.json({
+      interns: rows,
+      summary: { total: rows.length, active, notStarted: rows.length - active, exercisesPassed, avgCompletion },
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Mark a lesson complete for the signed in student. Called by the frontend
+// only after a graded, passed submission.
+app.post('/api/lessons/complete', requireAuth, async (req, res) => {
+  const { lessonId, courseId = null } = req.body || {};
+  if (!lessonId) return res.status(400).json({ error: 'lessonId is required' });
+  try {
+    await dbRun('INSERT OR IGNORE INTO lesson_completions (student_id, course_id, lesson_id) VALUES (?,?,?)', [req.user.email, courseId, String(lessonId)]);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Time on task. start -> ping (30s while visible) -> end. A ping only credits
+// time when it arrives within 45s of the previous one, so idle gaps never count.
+// ---------------------------------------------------------------------------
+app.post('/api/sessions/start', requireAuth, async (req, res) => {
+  const { lessonId = null, courseId = null, screen = null } = req.body || {};
+  try {
+    const r = await dbRun('INSERT INTO learn_sessions (student_id, course_id, lesson_id, screen) VALUES (?,?,?,?)', [req.user.email, courseId, lessonId, screen]);
+    res.json({ ok: true, sessionId: r.lastID });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+async function creditSession(req, res, endIt) {
+  const { sessionId } = req.body || {};
+  if (!sessionId) return res.status(400).json({ error: 'sessionId is required' });
+  try {
+    const s = await dbGet('SELECT * FROM learn_sessions WHERE id = ? AND student_id = ?', [sessionId, req.user.email]);
+    if (!s) return res.status(404).json({ error: 'Session not found' });
+    if (s.ended_at) return res.json({ ok: true, activeMs: s.active_ms });
+    const last = new Date(String(s.last_ping_at).replace(' ', 'T') + 'Z').getTime();
+    const delta = Date.now() - last;
+    const credit = delta > 0 && delta <= 45000 ? delta : 0;
+    await dbRun(
+      `UPDATE learn_sessions SET active_ms = active_ms + ?, last_ping_at = CURRENT_TIMESTAMP${endIt ? ', ended_at = CURRENT_TIMESTAMP' : ''} WHERE id = ?`,
+      [credit, s.id]
+    );
+    res.json({ ok: true, credited: credit });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+app.post('/api/sessions/ping', requireAuth, (req, res) => creditSession(req, res, false));
+app.post('/api/sessions/end', requireAuth, (req, res) => creditSession(req, res, true));
+
+// ---------------------------------------------------------------------------
+// Real grading. A second, strict Claude pass judges the learner's transcript
+// against the exercise success criteria. No grade, no pass.
+// ---------------------------------------------------------------------------
+const GRADER_MODEL = process.env.GRADER_MODEL || CLAUDE_MODEL;
+const GRADER_SYSTEM = `You are the grader for the InstaSpace "Claude for Specialists" learning portal. You grade a learner's exercise session strictly and fairly.
+
+Rules:
+- Judge ONLY what the LEARNER wrote. Mentor messages are context and earn no credit.
+- A criterion passes only when the learner's own messages contain concrete evidence it was met. Vague agreement, stated intentions, or one word replies never pass.
+- If the learner never produced the actual work (a prompt, a plan, a list, a document), fail every criterion that expected work.
+- overall_pass is true only when every criterion passes.
+- feedback is 2 to 4 sentences, direct and specific, telling the learner exactly what to fix or what they did well. Never use dashes as punctuation.
+
+Return ONLY valid JSON, no markdown fences, exactly this shape:
+{"criteria":[{"criterion":"...","pass":true,"reason":"one line of evidence, or what was missing"}],"overall_pass":false,"feedback":"..."}
+The criteria array must match the given success criteria in order, one entry per criterion.`;
+
+function extractJson(text) {
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start === -1 || end <= start) return null;
+  try { return JSON.parse(text.slice(start, end + 1)); } catch (e) { return null; }
+}
+
+app.post('/api/grade', requireAuth, async (req, res) => {
+  const { exerciseId, context = {}, transcript = [] } = req.body || {};
+  const criteria = Array.isArray(context.criteria) ? context.criteria.filter(Boolean) : [];
+  if (!exerciseId || !criteria.length || !Array.isArray(transcript) || !transcript.length) {
+    return res.status(400).json({ error: 'exerciseId, context.criteria, and transcript are required' });
+  }
+  if (!anthropic) {
+    return res.status(503).json({
+      error: 'Grading needs Claude connected',
+      hint: 'Set CLAUDE_API_KEY in .env, then restart. Exercises cannot be passed without a real grade.',
+    });
+  }
+
+  const lines = transcript
+    .slice(-30)
+    .map((m) => `${m.role === 'user' ? 'LEARNER' : 'MENTOR'}: ${typeof m.content === 'string' ? m.content : JSON.stringify(m.content)}`);
+  const sessionText = lines.join('\n\n').slice(-24000);
+  const userMsg = [
+    `Course: ${context.courseTitle || ''}`,
+    `Lesson: ${context.lessonTitle || ''}`,
+    `Exercise: ${context.exerciseTitle || ''}`,
+    context.brief ? `Brief: ${context.brief}` : '',
+    '',
+    'Success criteria to grade, in order:',
+    criteria.map((c, i) => `${i + 1}. ${c}`).join('\n'),
+    '',
+    'Full session transcript:',
+    sessionText,
+  ].filter(Boolean).join('\n');
+
+  try {
+    let result = null;
+    for (let attempt = 0; attempt < 2 && !result; attempt++) {
+      const response = await anthropic.messages.create({
+        model: GRADER_MODEL,
+        max_tokens: 1400,
+        system: GRADER_SYSTEM,
+        messages: [{ role: 'user', content: attempt === 0 ? userMsg : userMsg + '\n\nReturn ONLY the JSON object, nothing else.' }],
+      });
+      const text = response.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n');
+      result = extractJson(text);
+    }
+    if (!result || !Array.isArray(result.criteria)) {
+      return res.status(502).json({ error: 'Grader returned an unreadable result. Try submitting again.' });
+    }
+
+    const perCriterion = criteria.map((c, i) => {
+      const g = result.criteria[i] || {};
+      return { criterion: c, pass: g.pass === true, reason: String(g.reason || '') };
+    });
+    const passed = result.overall_pass === true && perCriterion.every((c) => c.pass);
+    const learnerWork = transcript.filter((m) => m.role === 'user').map((m) => m.content).join('\n\n');
+
+    await dbRun(
+      'INSERT INTO exercise_submissions (student_id, exercise_id, content, passed, grade_json, feedback) VALUES (?,?,?,?,?,?)',
+      [req.user.email, String(exerciseId), learnerWork, passed ? 1 : 0, JSON.stringify(perCriterion), String(result.feedback || '')]
+    );
+
+    res.json({ passed, criteria: perCriterion, feedback: String(result.feedback || '') });
+  } catch (err) {
+    console.error('[grade] error:', err.message);
+    res.status(502).json({ error: 'Grading request failed', detail: err.message });
+  }
 });
 
 // ---------------------------------------------------------------------------

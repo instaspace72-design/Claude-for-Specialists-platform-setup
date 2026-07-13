@@ -13,6 +13,12 @@ function SummaryTile({ label, value, accent }){
   );
 }
 
+function fmtMins(mins){
+  const m = Math.max(0, Math.round(mins || 0));
+  if (m < 60) return `${m}m`;
+  return `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m`;
+}
+
 function fmtLast(ts){
   if (!ts) return 'No activity yet';
   // SQLite CURRENT_TIMESTAMP is 'YYYY-MM-DD HH:MM:SS' in UTC
@@ -55,7 +61,11 @@ function InternRow({ it, i, onOpen, isStar }){
           <div style={{ fontWeight:800, fontSize:20 }}>{it.exercisesPassed}</div>
           <div className="eyebrow" style={{ marginTop:4 }}>Passed</div>
         </div>
-        <div style={{ textAlign:'center', minWidth:64 }}>
+        <div style={{ textAlign:'center', minWidth:70 }}>
+          <div style={{ fontWeight:800, fontSize:20, color: (it.activeMinutes7d || 0) > 0 ? 'var(--accent)' : 'var(--cream)' }}>{fmtMins(it.activeMinutes7d)}</div>
+          <div className="eyebrow" style={{ marginTop:4 }}>Time · 7d</div>
+        </div>
+        <div style={{ textAlign:'center', minWidth:60 }}>
           <div style={{ fontWeight:800, fontSize:20, color: it.streak > 0 ? 'var(--accent)' : 'var(--cream)' }}>{it.streak}</div>
           <div className="eyebrow" style={{ marginTop:4 }}>Streak</div>
         </div>

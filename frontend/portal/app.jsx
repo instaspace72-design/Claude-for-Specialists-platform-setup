@@ -44,11 +44,68 @@ function App(){
   const [pct, setPct] = useState(() => pctFor(initialDept()));
   const [streak, setStreak] = useState(0);
   const [exercisesPassed, setExercisesPassed] = useState(0);
+  const [minutes, setMinutes] = useState(0);
+  const [activeDays, setActiveDays] = useState([]);
   const [report, setReport] = useState(null);
   const [certificateOpen, setCertificateOpen] = useState(false);
   const [, setContentVersion] = useState(0);
 
   const course = window.COURSES[dept.id] || window.COURSES.growth;
+  const deptRef = useRef(dept);
+  useEffect(() => { deptRef.current = dept; }, [dept]);
+
+  // Load the student's real progress from the server and derive every lesson
+  // status from it. This is the single source of truth; nothing is assumed.
+  const refreshProgress = () => {
+    if (!user || user.role !== 'intern' || !window.authFetch) return;
+    window.authFetch('/api/progress/me')
+      .then((r) => r.json())
+      .then((p) => {
+        if (!p || p.error) return;
+        const done = new Set((p.completions || []).map((c) => c.lesson_id));
+        Object.values(window.COURSES).forEach((c) => {
+          let activeSet = false;
+          c.lessons.forEach((l) => {
+            if (done.has(l.id)) l.status = 'done';
+            else if (!activeSet) { l.status = 'active'; activeSet = true; }
+            else l.status = 'locked';
+          });
+        });
+        setStreak(p.streak || 0);
+        setExercisesPassed(p.exercisesPassed || 0);
+        setMinutes(p.activeMinutesTotal || 0);
+        setActiveDays(p.activeDays || []);
+        setPct(pctFor(deptRef.current));
+        setContentVersion((v) => v + 1);
+      })
+      .catch(() => {});
+  };
+  useEffect(() => { refreshProgress(); }, [user && user.email]);
+
+  // Time on task: while a lesson or exercise is open, keep a learn session
+  // alive with a 30s ping whenever the tab is actually visible.
+  useEffect(() => {
+    if (!user || user.role !== 'intern' || !window.authFetch) return;
+    if (screen !== 'lesson' && screen !== 'exercise') return;
+    let sessionId = null, stopped = false;
+    window.authFetch('/api/sessions/start', {
+      method: 'POST',
+      body: JSON.stringify({ lessonId: lessonId || null, courseId: course.id, screen }),
+    })
+      .then((r) => r.json())
+      .then((d) => { if (!stopped && d && d.sessionId) sessionId = d.sessionId; })
+      .catch(() => {});
+    const timer = setInterval(() => {
+      if (sessionId && document.visibilityState === 'visible') {
+        window.authFetch('/api/sessions/ping', { method: 'POST', body: JSON.stringify({ sessionId }) }).catch(() => {});
+      }
+    }, 30000);
+    return () => {
+      stopped = true;
+      clearInterval(timer);
+      if (sessionId) window.authFetch('/api/sessions/end', { method: 'POST', body: JSON.stringify({ sessionId }) }).catch(() => {});
+    };
+  }, [user && user.email, screen, lessonId]);
 
   // apply accent + motion to :root
   useEffect(() => {
@@ -83,16 +140,27 @@ function App(){
   const startExercise = () => setScreen('exercise');
 
   const completeExercise = () => {
-    // mark active lesson done, bump progress + streak
+    // called only after a graded, passed submission: persist the completion,
+    // advance the local statuses, then refresh the real numbers from the server
     const lessons = course.lessons;
     const active = lessons.find(l => l.status === 'active');
-    if (active){ active.status = 'done'; const next = lessons.find(l => l.status === 'locked'); if (next) next.status = 'active'; }
+    if (active){
+      active.status = 'done';
+      const next = lessons.find(l => l.status === 'locked');
+      if (next) next.status = 'active';
+      if (user && window.authFetch){
+        window.authFetch('/api/lessons/complete', {
+          method: 'POST',
+          body: JSON.stringify({ lessonId: active.id, courseId: course.id }),
+        }).catch(() => {});
+      }
+    }
     const newPct = pctFor(dept);
     setPct(newPct);
-    setStreak(s => Math.max(s, 1));
     setExercisesPassed(n => n + 1);
+    setTimeout(refreshProgress, 800); // pick up the real streak + minutes
 
-    // persist progress so the leadership dashboard reflects it live
+    // keep the completion snapshot in sync for the leadership dashboard
     if (user && window.authFetch){
       const nextActive = lessons.find(l => l.status === 'active');
       window.authFetch('/api/progress', {
@@ -104,7 +172,7 @@ function App(){
           currentLesson: nextActive ? nextActive.n : lessons.length,
           completionPercentage: newPct,
           exercisesSubmitted: exercisesPassed + 1,
-          streakDays: Math.max(streak, 1),
+          streakDays: streak,
         }),
       }).catch(() => {});
     }
@@ -181,11 +249,11 @@ function App(){
     <div style={{ display:'flex', height:'100vh', width:'100vw' }}>
       <Sidebar screen={screen} go={go} dept={dept} streak={streak} pct={pct} user={user} onLogout={logout} />
       <main style={{ flex:1, minWidth:0, height:'100%', position:'relative' }}>
-        {screen === 'dashboard' && <Dashboard key={"d"+dept.id} dept={dept} course={course} pct={pct} streak={streak} exercisesPassed={exercisesPassed} go={go} resumeLesson={openLesson} switchTrack={switchTrack} user={user} />}
+        {screen === 'dashboard' && <Dashboard key={"d"+dept.id} dept={dept} course={course} pct={pct} streak={streak} exercisesPassed={exercisesPassed} minutes={minutes} go={go} resumeLesson={openLesson} switchTrack={switchTrack} user={user} />}
         {screen === 'course' && <CourseOverview key="c" course={course} dept={dept} go={go} openLesson={openLesson} pct={pct} />}
         {screen === 'lesson' && <LessonView key={"l"+lessonId} course={course} lesson={lesson} go={go} startExercise={startExercise} backToCourse={() => setScreen('course')} />}
         {screen === 'exercise' && <Exercise key={"e"+(lesson && lesson.id)} course={course} lesson={lesson} practice={activePractice} backToLesson={() => setScreen('lesson')} onComplete={completeExercise} />}
-        {screen === 'progress' && <Progress key="p" course={course} pct={pct} streak={streak} exercisesPassed={exercisesPassed} onViewCertificate={() => setCertificateOpen(true)} />}
+        {screen === 'progress' && <Progress key="p" course={course} pct={pct} streak={streak} exercisesPassed={exercisesPassed} minutes={minutes} activeDays={activeDays} onViewCertificate={() => setCertificateOpen(true)} />}
       </main>
       <PortalTweaks t={t} setTweak={setTweak} />
       {report && <ReportToast data={report} userName={(user.firstName || user.name || 'Learner').toUpperCase()} onClose={() => setReport(null)} />}
