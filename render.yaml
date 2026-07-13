@@ -1,0 +1,32 @@
+# Render blueprint for the Claude for Specialists learning portal.
+# One web service runs the Express API and serves the frontend.
+# In the Render dashboard, fill in the secret env vars (marked sync: false)
+# and confirm the persistent disk so the accounts database survives deploys.
+services:
+  - type: web
+    name: claude-for-specialists
+    runtime: node
+    plan: starter            # a paid plan is needed for the persistent disk below
+    region: frankfurt        # closest to the UAE; change if you prefer
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DB_PATH
+        value: /data/local.db          # store SQLite on the persistent disk
+      - key: AIRTABLE_API_KEY
+        sync: false                     # paste your Airtable token in the dashboard
+      - key: AIRTABLE_BASE_ID
+        sync: false                     # paste your base id in the dashboard
+      - key: CLAUDE_API_KEY
+        sync: false                     # optional: enables live practice chat
+      - key: DEFAULT_PASSWORD
+        sync: false                     # optional: overrides Instaspace@123
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1
