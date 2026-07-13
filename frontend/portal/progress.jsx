@@ -1,8 +1,9 @@
 /* Progress / achievements screen */
 
-function Progress({ course, pct, streak, exercisesPassed }){
+function Progress({ course, pct, streak, exercisesPassed, onViewCertificate }){
   const doneCount = course.lessons.filter(l => l.status === 'done').length;
   const passed = exercisesPassed || 0;
+  const courseCleared = pct >= 100;
   // Badges are earned from real progress, not pre-filled.
   const earnedMap = {
     'first-lesson': doneCount >= 1,
@@ -27,6 +28,31 @@ function Progress({ course, pct, streak, exercisesPassed }){
         <p className="c70 reveal" style={{ fontSize:17, fontWeight:500, animationDelay:'.1s', margin:0 }}>
           {earned} of {achievements.length} badges earned. Keep the streak alive.
         </p>
+
+        {courseCleared && onViewCertificate && (
+          <div className="reveal surface" style={{
+            marginTop:22, padding:'18px 22px', display:'flex', alignItems:'center', gap:16,
+            background:'linear-gradient(135deg, rgba(242,98,46,.18), rgba(209,30,76,.12))',
+            border:'1px solid rgba(242,98,46,.32)', animationDelay:'.14s',
+          }}>
+            <div style={{
+              width:44, height:44, borderRadius:'var(--r-md)', flexShrink:0,
+              background:'var(--accent-grad)', color:'var(--aubergine)',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              fontFamily:'var(--mono)', fontWeight:900, fontSize:15, letterSpacing:'.05em',
+            }}>iS</div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div className="eyebrow" style={{ color:'var(--accent)', marginBottom:4 }}>Course cleared</div>
+              <div style={{ fontWeight:800, fontSize:16, letterSpacing:'-0.01em' }}>Your Reward Certificate is ready.</div>
+              <div className="c70" style={{ fontSize:13, marginTop:2 }}>Personalised to you, printable, and yours to keep.</div>
+            </div>
+            <button
+              onClick={onViewCertificate}
+              className="btn btn-primary"
+              style={{ padding:'11px 20px', fontSize:14 }}
+            >View Certificate <span style={{ fontSize:16 }}>→</span></button>
+          </div>
+        )}
 
         {/* top row: ring + streak */}
         <div className="stagger" style={{ display:'grid', gridTemplateColumns:'1fr 1.4fr', gap:16, marginTop:30 }}>

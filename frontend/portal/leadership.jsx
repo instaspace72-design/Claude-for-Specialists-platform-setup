@@ -22,10 +22,16 @@ function fmtLast(ts){
          d.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
 }
 
-function InternRow({ it, i }){
+function InternRow({ it, i, onOpen, isStar }){
   const started = it.status === 'Active';
   return (
-    <div className="surface reveal" style={{ padding:'18px 22px', animationDelay:`${i*0.05}s` }}>
+    <div
+      className="surface reveal"
+      onClick={() => onOpen && onOpen(it)}
+      style={{ padding:'18px 22px', animationDelay:`${i*0.05}s`, cursor: onOpen ? 'pointer' : 'default', transition:'transform .18s var(--ease), border-color .18s var(--ease)', borderColor: isStar ? 'rgba(242,98,46,.35)' : undefined }}
+      onMouseEnter={(e) => { if (onOpen) e.currentTarget.style.transform = 'translateY(-1px)'; }}
+      onMouseLeave={(e) => { if (onOpen) e.currentTarget.style.transform = 'none'; }}
+    >
       <div style={{ display:'flex', alignItems:'center', gap:16 }}>
         <div style={{ width:46, height:46, borderRadius:'var(--r-md)', flexShrink:0, background: started ? 'var(--accent-grad)' : 'var(--aubergine-deep)',
           color: started ? 'var(--aubergine)' : 'rgba(245,239,232,.6)', display:'flex', alignItems:'center', justifyContent:'center',
@@ -55,6 +61,11 @@ function InternRow({ it, i }){
         </div>
 
         <div style={{ minWidth:150, textAlign:'right' }}>
+          {isStar && (
+            <span className="pill" style={{
+              background:'var(--accent-grad)', color:'var(--aubergine)', fontWeight:800, marginRight:6,
+            }}>★ Star</span>
+          )}
           <span className="pill" style={{
             background: started ? 'rgba(31,138,91,.16)' : 'rgba(245,239,232,.06)',
             color: started ? '#4fd18b' : 'rgba(245,239,232,.5)' }}>
@@ -69,16 +80,26 @@ function InternRow({ it, i }){
 
 function LeadershipDashboard({ user, onLogout }){
   const [data, setData] = useState(null);
+  const [ratings, setRatings] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [addOpen, setAddOpen] = useState(false);
+  const [detailIntern, setDetailIntern] = useState(null);
+  const [reportIntern, setReportIntern] = useState(null);
 
   const load = () => {
     setLoading(true); setError('');
-    window.authFetch('/api/leadership/overview')
-      .then(async (res) => {
-        const body = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(body.error || `Failed to load (${res.status})`);
-        setData(body);
+    const period = window.currentPeriod ? window.currentPeriod() : '';
+    Promise.all([
+      window.authFetch('/api/leadership/overview'),
+      window.authFetch(`/api/leadership/ratings?period=${period}`),
+    ])
+      .then(async ([overviewRes, ratingsRes]) => {
+        const overview = await overviewRes.json().catch(() => ({}));
+        if (!overviewRes.ok) throw new Error(overview.error || `Failed to load (${overviewRes.status})`);
+        const ratingsBody = await ratingsRes.json().catch(() => ({}));
+        setData(overview);
+        setRatings(ratingsRes.ok ? ratingsBody : null);
       })
       .catch((err) => {
         const offline = /Failed to fetch|NetworkError/i.test(err.message);
@@ -91,6 +112,9 @@ function LeadershipDashboard({ user, onLogout }){
 
   const summary = data && data.summary;
   const interns = (data && data.interns) || [];
+  const starEmail = ratings && ratings.star && ratings.star.intern_email;
+  const starIntern = starEmail && interns.find((i) => i.email === starEmail);
+  const openReport = (it) => { setDetailIntern(null); setReportIntern(it); };
 
   return (
     <div className="scroll" style={{ height:'100%', width:'100%', background:'var(--ground)', position:'relative' }}>
@@ -107,6 +131,7 @@ function LeadershipDashboard({ user, onLogout }){
             </div>
             <div style={{ width:40, height:40, borderRadius:'var(--r-pill)', background:'var(--aubergine-lift)', border:'1px solid rgba(245,239,232,.1)',
               display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:14 }}>{window.initials ? window.initials(user.name) : ''}</div>
+            <button onClick={() => setAddOpen(true)} className="btn btn-primary" style={{ padding:'9px 18px', fontSize:13 }}>+ Add intern</button>
             <button onClick={load} className="btn btn-ghost" style={{ padding:'9px 16px', fontSize:13 }}>Refresh</button>
             <button onClick={onLogout} className="btn btn-ghost" style={{ padding:'9px 16px', fontSize:13 }}>Sign out</button>
           </div>
@@ -142,9 +167,55 @@ function LeadershipDashboard({ user, onLogout }){
               <SummaryTile label="Avg Completion" value={summary.avgCompletion + '%'} />
             </div>
 
+            {starIntern && ratings.star.overall != null && (
+              <div className="reveal surface" style={{
+                marginTop:26, padding:'18px 22px', display:'flex', alignItems:'center', gap:16,
+                background:'linear-gradient(135deg, rgba(242,98,46,.16), rgba(209,30,76,.10))',
+                border:'1px solid rgba(242,98,46,.32)',
+              }}>
+                <div style={{
+                  width:56, height:56, borderRadius:'50%', flexShrink:0,
+                  background:'var(--accent-grad)', color:'var(--aubergine)',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  fontSize:26, fontWeight:900,
+                }}>★</div>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div className="eyebrow" style={{ color:'var(--accent)' }}>
+                    Star of the Month · {window.periodLabel ? window.periodLabel(ratings.period) : ratings.period}
+                  </div>
+                  <div style={{ fontWeight:900, fontSize:22, letterSpacing:'-0.02em', marginTop:4 }}>{starIntern.name}</div>
+                  <div className="c70" style={{ fontSize:13, marginTop:2 }}>
+                    {starIntern.title} · rated by {ratings.star.leaders} leader{ratings.star.leaders === 1 ? '' : 's'}
+                  </div>
+                </div>
+                <div style={{ textAlign:'right' }}>
+                  <div className="mono" style={{ fontSize:10, letterSpacing:'.2em', color:'rgba(245,239,232,.5)' }}>OVERALL</div>
+                  <div style={{ fontWeight:900, fontSize:32, letterSpacing:'-0.02em', color:'var(--accent)' }}>
+                    {ratings.star.overall.toFixed(1)}
+                  </div>
+                </div>
+                <button
+                  onClick={() => openReport(starIntern)}
+                  className="btn btn-primary"
+                  style={{ padding:'9px 18px', fontSize:13 }}
+                >Open report</button>
+              </div>
+            )}
+
             <div className="eyebrow reveal" style={{ marginTop:40, marginBottom:16 }}>The Team · {interns.length}</div>
             <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-              {interns.map((it, i) => <InternRow key={it.email} it={it} i={i} />)}
+              {interns.map((it, i) => (
+                <InternRow
+                  key={it.email}
+                  it={it}
+                  i={i}
+                  isStar={starEmail === it.email}
+                  onOpen={setDetailIntern}
+                />
+              ))}
+            </div>
+            <div className="mono c35 reveal" style={{ fontSize:11, textAlign:'center', marginTop:14, letterSpacing:'.08em' }}>
+              Click any intern to rate them, add remarks, or open the one click report.
             </div>
 
             {summary.active === 0 && (
@@ -156,6 +227,27 @@ function LeadershipDashboard({ user, onLogout }){
           </React.Fragment>
         )}
       </div>
+
+      {addOpen && window.AddInternModal && (
+        <AddInternModal
+          onClose={() => setAddOpen(false)}
+          onCreated={() => { setAddOpen(false); load(); }}
+        />
+      )}
+      {detailIntern && window.InternDetailDrawer && (
+        <InternDetailDrawer
+          user={user}
+          intern={detailIntern}
+          onClose={() => { setDetailIntern(null); load(); }}
+          onOpenReport={(it) => openReport(it)}
+        />
+      )}
+      {reportIntern && window.PerformanceReport && (
+        <PerformanceReport
+          intern={reportIntern}
+          onClose={() => setReportIntern(null)}
+        />
+      )}
     </div>
   );
 }

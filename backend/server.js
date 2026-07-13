@@ -121,6 +121,32 @@ db.serialize(() => {
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     expires_at TEXT NOT NULL
   )`, () => seedUsers());
+
+  // Leadership ratings: one row per (intern, leader, month). KPI scores are 1-10.
+  db.run(`CREATE TABLE IF NOT EXISTS intern_ratings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    intern_email TEXT NOT NULL,
+    leader_email TEXT NOT NULL,
+    period TEXT NOT NULL,
+    time_score INTEGER,
+    discipline INTEGER,
+    dedication INTEGER,
+    willingness INTEGER,
+    attention INTEGER,
+    reporting INTEGER,
+    communication INTEGER,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(intern_email, leader_email, period)
+  )`);
+
+  // Leadership remarks/notes: many per intern from any leader, timestamped.
+  db.run(`CREATE TABLE IF NOT EXISTS intern_notes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    intern_email TEXT NOT NULL,
+    leader_email TEXT NOT NULL,
+    body TEXT NOT NULL,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  )`);
 });
 
 // ---------------------------------------------------------------------------
@@ -157,14 +183,14 @@ function userPublic(u) {
 // leadership gets the CEO/COO/CPO dashboard (built next). Seeded once, only
 // when the users table is empty, so it never clobbers changed passwords.
 const SEED_USERS = [
-  { email: 'mesum@myinstaspace.com',    name: 'Mesum',         first: 'Mesum',    role: 'intern',     title: 'SEO & Backlinks',       track: 'seo' },
-  { email: 'shahzaib@myinstaspace.com', name: 'Shahzaib Nasir', first: 'Shahzaib', role: 'intern',     title: 'Design & Video',        track: 'design' },
-  { email: 'umair@myinstaspace.com',    name: 'Umair Aziz',    first: 'Umair',    role: 'intern',     title: 'QA, No-code & SEO',     track: 'qa-nocode' },
-  { email: 'abdullah@myinstaspace.com', name: 'Abdullah',      first: 'Abdullah', role: 'intern',     title: 'QA & SEO',              track: 'qa-seo' },
-  { email: 'osman@myinstaspace.com',    name: 'Osman',         first: 'Osman',    role: 'leadership', title: 'CEO',                   track: null },
-  { email: 'jybran@myinstaspace.com',   name: 'Jybran',        first: 'Jybran',   role: 'leadership', title: 'COO',                   track: null },
-  { email: 'talha@myinstaspace.com',    name: 'Talha',         first: 'Talha',    role: 'leadership', title: 'CPO',                   track: null },
-  { email: 'ayesha@myinstaspace.com',   name: 'Ayesha',        first: 'Ayesha',   role: 'leadership', title: 'Project Manager',       track: null },
+  { email: 'mesum@myinstaspace.com',    name: 'Mesum',         first: 'Mesum',    role: 'intern',     title: 'SEO & Backlinks',         track: 'seo' },
+  { email: 'shahzaib@myinstaspace.com', name: 'Shahzaib Nasir', first: 'Shahzaib', role: 'intern',     title: 'Design & Video',          track: 'design' },
+  { email: 'umair@myinstaspace.com',    name: 'Umair Aziz',    first: 'Umair',    role: 'intern',     title: 'InstaSpace App Mastery',  track: 'webapp-portal' },
+  { email: 'abdullah@myinstaspace.com', name: 'Abdullah',      first: 'Abdullah', role: 'intern',     title: 'InstaSpace App Mastery',  track: 'webapp-portal' },
+  { email: 'osman@myinstaspace.com',    name: 'Osman',         first: 'Osman',    role: 'leadership', title: 'CEO',                     track: null },
+  { email: 'jybran@myinstaspace.com',   name: 'Jybran',        first: 'Jybran',   role: 'leadership', title: 'COO',                     track: null },
+  { email: 'talha@myinstaspace.com',    name: 'Talha',         first: 'Talha',    role: 'leadership', title: 'CPO',                     track: null },
+  { email: 'ayesha@myinstaspace.com',   name: 'Ayesha',        first: 'Ayesha',   role: 'leadership', title: 'Project Manager',         track: null },
 ];
 
 function seedUsers() {
@@ -183,6 +209,16 @@ function seedUsers() {
   stmt.finalize((e) => {
     if (e) console.error('[seed] error:', e.message);
     else console.log(`[seed] ensured ${SEED_USERS.length} accounts (default password: ${DEFAULT_PASSWORD})`);
+  });
+
+  // Second pass: sync role/title/track for existing accounts so track changes
+  // (e.g. moving Umair + Abdullah onto the InstaSpace App Mastery course)
+  // land on the next boot without touching passwords or session tokens.
+  const sync = db.prepare('UPDATE users SET role = ?, title = ?, track = ? WHERE email = ?');
+  for (const u of SEED_USERS) sync.run(u.role, u.title, u.track, u.email);
+  sync.finalize((e) => {
+    if (e) console.error('[seed] sync error:', e.message);
+    else console.log('[seed] synced role/title/track for existing accounts');
   });
 }
 
@@ -630,6 +666,267 @@ app.get('/api/leadership/overview', requireAuth, (req, res) => {
         summary: { total: rows.length, active, notStarted: rows.length - active, exercisesPassed, avgCompletion },
       });
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Leadership: create intern, KPI ratings, remarks, one-click performance report
+// ---------------------------------------------------------------------------
+const KPI_FIELDS = ['time_score', 'discipline', 'dedication', 'willingness', 'attention', 'reporting', 'communication'];
+const KPI_LABELS = {
+  time_score: 'Time',
+  discipline: 'Discipline',
+  dedication: 'Dedication',
+  willingness: 'Willingness',
+  attention: 'Attention to Detail',
+  reporting: 'Reporting Habits',
+  communication: 'Communication',
+};
+
+function requireLeadership(req, res, next) {
+  if (req.user && req.user.role === 'leadership') return next();
+  return res.status(403).json({ error: 'Leadership access only' });
+}
+
+function currentPeriod() {
+  const d = new Date();
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
+function clampKpi(v) {
+  const n = Math.round(Number(v));
+  if (!Number.isFinite(n)) return null;
+  return Math.max(1, Math.min(10, n));
+}
+
+// Create a new intern account. Leadership only. Ships with the default password
+// and forces a change on first login, matching the seed flow.
+app.post('/api/leadership/interns', requireAuth, requireLeadership, (req, res) => {
+  const { email, name, firstName, title, track } = req.body || {};
+  const cleanEmail = String(email || '').trim().toLowerCase();
+  const cleanName = String(name || '').trim();
+  if (!cleanEmail || !cleanName) return res.status(400).json({ error: 'Email and name are required' });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) return res.status(400).json({ error: 'Enter a valid email' });
+
+  const first = String(firstName || cleanName.split(/\s+/)[0]).trim();
+  const cleanTitle = String(title || 'Intern').trim();
+  const cleanTrack = track ? String(track).trim() : null;
+  const { salt, hash } = hashPassword(DEFAULT_PASSWORD);
+
+  db.run(
+    `INSERT INTO users (email, name, first_name, role, title, track, salt, password_hash, must_change_password)
+     VALUES (?,?,?,?,?,?,?,?,1)`,
+    [cleanEmail, cleanName, first, 'intern', cleanTitle, cleanTrack, salt, hash],
+    function (err) {
+      if (err) {
+        if (/UNIQUE/.test(err.message)) return res.status(409).json({ error: 'An account with that email already exists' });
+        return res.status(500).json({ error: err.message });
+      }
+      res.json({
+        ok: true,
+        intern: { email: cleanEmail, name: cleanName, firstName: first, role: 'intern', title: cleanTitle, track: cleanTrack },
+        defaultPassword: DEFAULT_PASSWORD,
+      });
+    }
+  );
+});
+
+// All ratings + averages for a period, plus the star of the month (highest
+// overall average across leaders). Leadership only.
+app.get('/api/leadership/ratings', requireAuth, requireLeadership, (req, res) => {
+  const period = String(req.query.period || currentPeriod());
+  db.all(
+    `SELECT r.*, u.name AS leader_name, u.title AS leader_title
+       FROM intern_ratings r
+       LEFT JOIN users u ON u.email = r.leader_email
+       WHERE r.period = ?`,
+    [period],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      const byIntern = {};
+      rows.forEach((r) => {
+        const list = byIntern[r.intern_email] || (byIntern[r.intern_email] = []);
+        list.push(r);
+      });
+      const summary = Object.keys(byIntern).map((email) => {
+        const list = byIntern[email];
+        const kpi = {};
+        KPI_FIELDS.forEach((f) => {
+          const vals = list.map((r) => r[f]).filter((v) => Number.isFinite(v));
+          kpi[f] = vals.length ? +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2) : null;
+        });
+        const scored = KPI_FIELDS.map((f) => kpi[f]).filter((v) => v !== null);
+        const overall = scored.length ? +(scored.reduce((a, b) => a + b, 0) / scored.length).toFixed(2) : null;
+        return { intern_email: email, kpi, overall, leaders: list.length };
+      });
+      summary.sort((a, b) => (b.overall || 0) - (a.overall || 0));
+      const star = summary.length && summary[0].overall !== null ? summary[0] : null;
+      res.json({ period, ratings: rows, summary, star });
+    }
+  );
+});
+
+// Upsert one leader's KPI slider values for one intern for the period.
+app.post('/api/leadership/ratings', requireAuth, requireLeadership, (req, res) => {
+  const { internEmail, period, scores } = req.body || {};
+  const email = String(internEmail || '').trim().toLowerCase();
+  const per = String(period || currentPeriod());
+  if (!email || !scores || typeof scores !== 'object') {
+    return res.status(400).json({ error: 'internEmail and scores are required' });
+  }
+  const values = KPI_FIELDS.map((f) => clampKpi(scores[f]));
+  const placeholders = KPI_FIELDS.map(() => '?').join(', ');
+  const updates = KPI_FIELDS.map((f) => `${f}=excluded.${f}`).join(', ');
+  db.run(
+    `INSERT INTO intern_ratings (intern_email, leader_email, period, ${KPI_FIELDS.join(', ')}, updated_at)
+     VALUES (?, ?, ?, ${placeholders}, CURRENT_TIMESTAMP)
+     ON CONFLICT(intern_email, leader_email, period) DO UPDATE SET
+       ${updates}, updated_at=CURRENT_TIMESTAMP`,
+    [email, req.user.email, per, ...values],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ ok: true });
+    }
+  );
+});
+
+// All notes for one intern, from any leader, newest first.
+app.get('/api/leadership/notes/:internEmail', requireAuth, requireLeadership, (req, res) => {
+  const email = String(req.params.internEmail || '').trim().toLowerCase();
+  db.all(
+    `SELECT n.id, n.intern_email, n.leader_email, n.body, n.created_at,
+            u.name AS leader_name, u.title AS leader_title
+       FROM intern_notes n
+       LEFT JOIN users u ON u.email = n.leader_email
+       WHERE n.intern_email = ?
+       ORDER BY n.created_at DESC`,
+    [email],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ notes: rows || [] });
+    }
+  );
+});
+
+// Add a note.
+app.post('/api/leadership/notes', requireAuth, requireLeadership, (req, res) => {
+  const { internEmail, body } = req.body || {};
+  const email = String(internEmail || '').trim().toLowerCase();
+  const text = String(body || '').trim();
+  if (!email || !text) return res.status(400).json({ error: 'internEmail and body are required' });
+  if (text.length > 2000) return res.status(400).json({ error: 'Note too long (max 2000 chars)' });
+  db.run(
+    'INSERT INTO intern_notes (intern_email, leader_email, body) VALUES (?, ?, ?)',
+    [email, req.user.email, text],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ ok: true, id: this.lastID });
+    }
+  );
+});
+
+// One-click performance report: progress + KPI avg per leader + notes + star.
+app.get('/api/leadership/report/:internEmail', requireAuth, requireLeadership, (req, res) => {
+  const email = String(req.params.internEmail || '').trim().toLowerCase();
+  const period = String(req.query.period || currentPeriod());
+
+  db.get('SELECT email, name, first_name, title, track FROM users WHERE email = ? AND role = "intern"', [email], (e0, intern) => {
+    if (e0) return res.status(500).json({ error: e0.message });
+    if (!intern) return res.status(404).json({ error: 'Intern not found' });
+
+    db.get(
+      `SELECT COUNT(*) AS passed FROM exercise_submissions WHERE student_id = ? AND passed = 1`,
+      [email],
+      (e1, sub) => {
+        db.get(
+          `SELECT MAX(completion_percentage) AS pct, MAX(streak_days) AS streak,
+                  MAX(current_lesson) AS lesson, MAX(last_active) AS last, MAX(course_id) AS course
+             FROM student_progress WHERE student_id = ?`,
+          [email],
+          (e2, prog) => {
+            db.all(
+              `SELECT r.*, u.name AS leader_name, u.title AS leader_title
+                 FROM intern_ratings r
+                 LEFT JOIN users u ON u.email = r.leader_email
+                 WHERE r.intern_email = ? AND r.period = ?`,
+              [email, period],
+              (e3, ratings) => {
+                db.all(
+                  `SELECT n.id, n.body, n.created_at, u.name AS leader_name, u.title AS leader_title
+                     FROM intern_notes n
+                     LEFT JOIN users u ON u.email = n.leader_email
+                     WHERE n.intern_email = ?
+                     ORDER BY n.created_at DESC`,
+                  [email],
+                  (e4, notes) => {
+                    if (e3 || e4) return res.status(500).json({ error: (e3 || e4).message });
+                    const kpi = {};
+                    KPI_FIELDS.forEach((f) => {
+                      const vals = (ratings || []).map((r) => r[f]).filter((v) => Number.isFinite(v));
+                      kpi[f] = {
+                        label: KPI_LABELS[f],
+                        avg: vals.length ? +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2) : null,
+                        count: vals.length,
+                      };
+                    });
+                    const scored = KPI_FIELDS.map((f) => kpi[f].avg).filter((v) => v !== null);
+                    const overall = scored.length ? +(scored.reduce((a, b) => a + b, 0) / scored.length).toFixed(2) : null;
+
+                    // determine star-of-the-month across ALL interns for this period
+                    db.all(
+                      `SELECT intern_email, ${KPI_FIELDS.map((f) => `AVG(${f}) AS ${f}`).join(', ')}
+                         FROM intern_ratings WHERE period = ? GROUP BY intern_email`,
+                      [period],
+                      (e5, all) => {
+                        let isStar = false;
+                        let starEmail = null;
+                        let starScore = -1;
+                        (all || []).forEach((row) => {
+                          const vals = KPI_FIELDS.map((f) => Number(row[f])).filter((v) => Number.isFinite(v));
+                          if (!vals.length) return;
+                          const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+                          if (avg > starScore) { starScore = avg; starEmail = row.intern_email; }
+                        });
+                        isStar = starEmail === email && starScore > 0;
+
+                        res.json({
+                          period,
+                          intern: {
+                            email: intern.email,
+                            name: intern.name,
+                            firstName: intern.first_name,
+                            title: intern.title,
+                            track: intern.track,
+                          },
+                          progress: {
+                            exercisesPassed: (sub && sub.passed) || 0,
+                            completion: (prog && prog.pct) || 0,
+                            streak: (prog && prog.streak) || 0,
+                            currentLesson: (prog && prog.lesson) || 0,
+                            lastActive: (prog && prog.last) || null,
+                            courseId: (prog && prog.course) || null,
+                          },
+                          kpi,
+                          overall,
+                          leaderRatings: (ratings || []).map((r) => ({
+                            leader: r.leader_name,
+                            leaderTitle: r.leader_title,
+                            scores: KPI_FIELDS.reduce((o, f) => { o[f] = r[f]; return o; }, {}),
+                            updatedAt: r.updated_at,
+                          })),
+                          notes: notes || [],
+                          isStar,
+                        });
+                      }
+                    );
+                  }
+                );
+              }
+            );
+          }
+        );
+      }
+    );
   });
 });
 

@@ -45,6 +45,7 @@ function App(){
   const [streak, setStreak] = useState(0);
   const [exercisesPassed, setExercisesPassed] = useState(0);
   const [report, setReport] = useState(null);
+  const [certificateOpen, setCertificateOpen] = useState(false);
   const [, setContentVersion] = useState(0);
 
   const course = window.COURSES[dept.id] || window.COURSES.growth;
@@ -116,6 +117,11 @@ function App(){
         complete: newPct >= 100,
       });
     }
+
+    // Course fully cleared: open the reward certificate for the learner.
+    if (newPct >= 100) {
+      setTimeout(() => setCertificateOpen(true), 700);
+    }
   };
 
   const lesson = course.lessons.find(l => l.id === lessonId) || course.lessons.find(l => l.status === 'active') || course.lessons[0];
@@ -179,10 +185,11 @@ function App(){
         {screen === 'course' && <CourseOverview key="c" course={course} dept={dept} go={go} openLesson={openLesson} pct={pct} />}
         {screen === 'lesson' && <LessonView key={"l"+lessonId} course={course} lesson={lesson} go={go} startExercise={startExercise} backToCourse={() => setScreen('course')} />}
         {screen === 'exercise' && <Exercise key={"e"+(lesson && lesson.id)} course={course} lesson={lesson} practice={activePractice} backToLesson={() => setScreen('lesson')} onComplete={completeExercise} />}
-        {screen === 'progress' && <Progress key="p" course={course} pct={pct} streak={streak} exercisesPassed={exercisesPassed} />}
+        {screen === 'progress' && <Progress key="p" course={course} pct={pct} streak={streak} exercisesPassed={exercisesPassed} onViewCertificate={() => setCertificateOpen(true)} />}
       </main>
       <PortalTweaks t={t} setTweak={setTweak} />
       {report && <ReportToast data={report} userName={(user.firstName || user.name || 'Learner').toUpperCase()} onClose={() => setReport(null)} />}
+      {certificateOpen && <Certificate user={user} course={course} onClose={() => setCertificateOpen(false)} />}
     </div>
   );
 }

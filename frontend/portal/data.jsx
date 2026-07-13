@@ -35,10 +35,11 @@ const DEPARTMENTS = [
    Same shape as a department so the sidebar, dashboard, and course views
    render them without any special casing. */
 const SPECIALTIES = [
-  { id:'seo',       name:'SEO & Backlinks', badge:'SE', tagline:'Earn the links that earn the rankings.', blurb:'Read intent, spot link prospects, and write outreach that wins a real backlink for InstaSpace.' },
-  { id:'design',    name:'Design & Video',  badge:'DS', tagline:'Brief once, ship a campaign.',           blurb:'Turn a one line ask into briefs, storyboards, and on voice captions for Dubai and Maldives launches.' },
-  { id:'qa-nocode', name:'QA & No-code',    badge:'QA', tagline:'Break it before a guest does.',          blurb:'Think in test cases, generate a full suite with Claude, and wire no-code alerts that catch bugs early.' },
-  { id:'qa-seo',    name:'QA & SEO',        badge:'QS', tagline:'Quality on the page and in the code.',    blurb:'Audit a listing for bugs and search gaps in one pass, then turn findings into a roadmap.' },
+  { id:'seo',            name:'SEO & Backlinks',     badge:'SE', tagline:'Earn the links that earn the rankings.', blurb:'Read intent, spot link prospects, and write outreach that wins a real backlink for InstaSpace.' },
+  { id:'design',         name:'Design & Video',      badge:'DS', tagline:'Brief once, ship a campaign.',           blurb:'Turn a one line ask into briefs, storyboards, and on voice captions for Dubai and Maldives launches.' },
+  { id:'qa-nocode',      name:'QA & No-code',        badge:'QA', tagline:'Break it before a guest does.',          blurb:'Think in test cases, generate a full suite with Claude, and wire no-code alerts that catch bugs early.' },
+  { id:'qa-seo',         name:'QA & SEO',            badge:'QS', tagline:'Quality on the page and in the code.',    blurb:'Audit a listing for bugs and search gaps in one pass, then turn findings into a roadmap.' },
+  { id:'webapp-portal',  name:'InstaSpace App Mastery', badge:'WP', tagline:'Know the product cold, teach it back.',   blurb:'Master the InstaSpace webapp and the Learning Portal itself: surfaces, flows, roles, and the QA that keeps them honest.' },
 ];
 const SPECIALTY_BY_TRACK = SPECIALTIES.reduce((m, s) => { m[s.id] = s; return m; }, {});
 
@@ -1095,6 +1096,157 @@ const INTERN_COURSES = {
             'A measurement framework with targets',
           ],
           reward: { badge: 'SEO Strategist', note: 'You shipped a 90 day SEO strategy ops can execute. That is a capstone that moves rankings.' },
+        },
+      },
+    ],
+  },
+
+  'webapp-portal': {
+    id: 'WPM001', dept: 'webapp-portal', title: 'Master the InstaSpace Webapp and Learning Portal', level: 'Beginner', days: 5, instructor: 'Talha Asif',
+    summary: 'A hands on tour of the two products you will live inside: the InstaSpace webapp and this Learning Portal. Learn the surfaces, the flows, the roles, and the QA habits that keep them honest, and finish with a report leadership can act on.',
+    objectives: [
+      'Know every surface of the InstaSpace webapp and who each one is for',
+      'Walk the booking, hosting, wallet, and trust flows end to end',
+      'Ship a QA report on both products with a real, prioritised bug list',
+    ],
+    lessons: [
+      {
+        id: 'WPM001L01', n: 1, title: 'Tour the InstaSpace Webapp', mins: 120, difficulty: 'Novice', status: 'active',
+        concept: 'You cannot QA what you do not know. Day one is a guided tour of the InstaSpace webapp: the guest side, the host side, the property manager portal, the admin console, and the trust surfaces (KYC, disputes, GovShield). Open each one, map who it serves, and write down what it lets that person do in one line. By the end you should be able to draw the app on a napkin from memory.',
+        keyConcepts: [
+          'The webapp has four audiences: guests booking a stay, hosts renting out property, property managers running many units, and internal admins keeping trust intact.',
+          'Every surface exists to make one of those four either faster or safer. If a screen does not do either, it is a candidate for a cleanup ticket.',
+          'The trust surfaces (KYC/InstaPass, GovShield, disputes, AI-Auditor) are what separates InstaSpace from a plain listings site. Learn to spot them.',
+        ],
+        videoLabel: 'Lesson walkthrough',
+        practice: {
+          title: 'Map the InstaSpace Webapp', mins: 45, difficulty: 'Beginner',
+          brief: 'Use the prompt below in your live Claude session to turn your first hands on tour of the app into a structured product map you and the team can reuse.',
+          promptTemplate: 'I am touring the InstaSpace webapp for the first time as a new specialist. InstaSpace is a short term rental trust platform for the UAE (Dubai) and the Maldives. It has four audiences: guests, hosts, property managers, and admins. Trust modules include InstaPass (identity verification), GovShield (right to rent), AI-Auditor (listing authenticity), InstaWallet (payouts and pay from wallet), Disputes (resolution centre), and AI-Yield (host price suggestions).\n\nHelp me turn my tour into a Product Map document. Ask me a short set of questions about each audience, one at a time. For each answer I give, add a row to a table with these columns: surface name, audience, the one job it does, the trust module it touches (if any), and one thing I noticed that could be better.\n\nStart by asking me to name the first three guest side surfaces I opened.',
+          task: [
+            'Open the InstaSpace webapp on localhost or the live URL',
+            'Sign in as a guest first, walk the search and booking flow, and answer Claude\'s questions',
+            'Repeat for host, property manager, and admin surfaces',
+            'Save the finished Product Map as your reference for the rest of the week',
+          ],
+          success: [
+            'A single Product Map table covering all four audiences',
+            'Every row names the surface, the job, and any trust module it touches',
+            'At least three concrete "could be better" notes to feed into QA later',
+          ],
+          reward: { badge: 'Product Cartographer', note: 'You mapped the entire InstaSpace webapp in one pass. That map is the foundation for every test and every teach back you will do this week.' },
+        },
+      },
+
+      {
+        id: 'WPM001L02', n: 2, title: 'Walk the Money Flows: Booking, Wallet, Payouts', mins: 120, difficulty: 'Intermediate', status: 'locked',
+        concept: 'Money is where trust either holds or breaks. Day two walks the flows that move money through the platform: a guest books, funds land in escrow, the stay completes, InstaWallet pays the host, the guest earns loyalty coins, or a dispute rewrites the ending. Do each flow twice, once as the happy path and once trying to break it, and write down where you had to guess what would happen next.',
+        keyConcepts: [
+          'Booking is a chain: search, availability, price (including AI-Yield suggestion for hosts), payment, escrow, host payout on completion, wallet credit for the guest.',
+          'InstaWallet plugs in at two places: hosts get paid out on completion, and guests can pay from their wallet balance at checkout. Both need to be tested.',
+          'A dispute is a booking that ended sideways. The resolution centre must produce a real wallet refund, not just a status change.',
+        ],
+        videoLabel: 'Lesson walkthrough',
+        practice: {
+          title: 'Run the End to End Money Flow', mins: 45, difficulty: 'Intermediate',
+          brief: 'Use the prompt below to convert your live walkthrough into a step by step flow document, with an expected result for every step and a note wherever the app surprised you.',
+          promptTemplate: 'I am QA testing InstaSpace, a short term rental trust platform. I need to walk the full money flow from a guest booking to a host payout, then again through a dispute path.\n\nHelp me build a Money Flow Test Sheet. Ask me for each step in order (guest search, availability, price shown, payment, escrow confirmation, stay completion, host payout via InstaWallet, guest loyalty coins, dispute path).\n\nFor each step I describe, output a JSON row: {step, actor, expected result, observed result, severity if it differs (blocker, major, minor), and a one line fix idea}. At the end, produce a ranked bug list from the rows I flagged.\n\nStart by asking me what happens on the search screen for a Dubai Marina stay next weekend.',
+          task: [
+            'Book a test stay end to end using a seeded test guest account',
+            'Complete the stay (or simulate it) and confirm the host payout arrives in InstaWallet',
+            'Open a dispute on a second test booking and confirm the refund lands in the wallet',
+            'Feed each observed step back to Claude and keep the JSON rows for lesson 4',
+          ],
+          success: [
+            'Every step of the booking, payout, and dispute flow has an expected and an observed result',
+            'Any difference is scored blocker, major, or minor with a one line fix idea',
+            'You can name the single riskiest gap you found in the money flow',
+          ],
+          reward: { badge: 'Flow Auditor', note: 'You walked the money flow twice, once for trust and once trying to break it. That is the difference between clicking around and testing a product.' },
+        },
+      },
+
+      {
+        id: 'WPM001L03', n: 3, title: 'Inside the Learning Portal', mins: 120, difficulty: 'Intermediate', status: 'locked',
+        concept: 'This portal is a real product too, not just a slide deck with a login. Day three opens the hood: a React SPA loaded with Babel standalone on port 8000, an Express plus SQLite backend on port 3001, a Claude proxy at POST /api/chat, and content that either comes from a built in data.jsx or from Airtable when configured. Sign in as your intern account, then as a leadership account, and see how the same code branches to two different dashboards.',
+        keyConcepts: [
+          'Two servers in dev: frontend static server on 8000, Express API on 3001. In production the API serves the frontend on one port.',
+          'Content model: COURSES keyed by track id, each with lessons, each with a practice block. Airtable hydrates on boot if configured, otherwise the built in data ships.',
+          'Auth uses scrypt hashed passwords and bearer tokens in SQLite. First login forces a password change. Interns land on a specialty track, leadership lands on the overview.',
+        ],
+        videoLabel: 'Lesson walkthrough',
+        practice: {
+          title: 'Reverse Engineer the Portal', mins: 45, difficulty: 'Intermediate',
+          brief: 'Use the prompt below to turn a walk through the portal codebase into a plain English architecture note a new hire could read in ten minutes.',
+          promptTemplate: 'I am learning how the InstaSpace Learning Portal works from the inside. The stack is: React 18 loaded via Babel standalone, a tiny static frontend server (frontend/serve.js) on port 8000, an Express API (backend/server.js) on port 3001, SQLite for users, sessions, progress, and chat history, optional Airtable content hydration, and a Claude proxy at POST /api/chat.\n\nHelp me write a one page architecture note for a new intern joining next month. Ask me questions in order about: the frontend load order, how a user signs in, how the current specialty track picks the course, how a lesson\'s practice block becomes the exercise chat, and how progress is persisted for the leadership dashboard.\n\nFor each answer, add a paragraph to the note in clear, no dashes prose. At the end, list three files a new intern should read first and why.',
+          task: [
+            'Read frontend/index.html, frontend/portal/app.jsx, frontend/portal/data.jsx, backend/server.js in that order',
+            'Sign in once as an intern account and once as a leadership account, watch the different routes',
+            'Answer Claude\'s questions with what you actually see, not what you assume',
+            'Save the finished architecture note as your onboarding doc for the next specialist',
+          ],
+          success: [
+            'A one page architecture note covering frontend, backend, auth, content, and progress',
+            'Three named files a new intern should read first, each with a reason',
+            'Zero dashes as punctuation, InstaSpace voice held throughout',
+          ],
+          reward: { badge: 'Portal Insider', note: 'You can now explain the Learning Portal to a new hire without looking anything up. That is the level of ownership this team needs.' },
+        },
+      },
+
+      {
+        id: 'WPM001L04', n: 4, title: 'Testing Both Products End to End', mins: 120, difficulty: 'Intermediate', status: 'locked',
+        concept: 'You have the map (day 1), the money flow bug list (day 2), and the portal architecture (day 3). Day four turns all three into a single test suite that covers both products. Think in inputs and outcomes: what a guest, host, PM, admin, intern, and leadership user each try to do, what should happen, and what does happen. The test suite goes to engineering; the report goes to leadership.',
+        keyConcepts: [
+          'One suite, two products, six actor types. Do not mix them into one column; every case names its actor.',
+          'Every case has an id, a precondition, steps, an expected result, an observed result, and a priority.',
+          'A test without an expected result is a note, not a test, and a test without an observed result has not run yet.',
+        ],
+        videoLabel: 'Lesson walkthrough',
+        practice: {
+          title: 'Build the Cross Product Test Suite', mins: 45, difficulty: 'Intermediate',
+          brief: 'Use the prompt below to convert everything from day 1 to 3 into a structured test suite Claude can help you keep consistent.',
+          promptTemplate: 'I am QA lead intern for InstaSpace. I need one test suite that covers both the InstaSpace webapp and this Learning Portal.\n\nThe actors are: guest, host, property manager, admin, intern learner, and leadership viewer. The webapp surfaces to cover include search, listing, booking, InstaWallet, disputes, KYC/InstaPass, GovShield, and admin queues. The portal surfaces to cover include login, forced password change, intern dashboard, lesson view, live Claude exercise chat, progress screen, and leadership overview.\n\nGenerate at least 20 test cases as strict JSON. Each case has: id, actor, product (webapp or portal), surface, precondition, steps as an array, expected result, priority (P0 to P3), and a boolean is_edge. Cover the happy path and the edges. Mark every case that touches money or trust as at least P1.\n\nReturn ONLY the JSON array.',
+          task: [
+            'Run the prompt and get at least 20 cases back as JSON',
+            'Execute the P0 and P1 cases against your local webapp and this portal',
+            'Log the observed result for each and mark any failures with severity',
+            'Keep the completed suite for the capstone report tomorrow',
+          ],
+          success: [
+            'At least 20 cases, split across both products and all six actors',
+            'Every case has expected and observed results and a priority',
+            'All money and trust cases are marked at least P1',
+          ],
+          reward: { badge: 'Suite Builder', note: 'You built one test suite that spans two products and six actors. That is a QA lead moving with real leverage.' },
+        },
+      },
+
+      {
+        id: 'WPM001L05', n: 5, title: 'Capstone: Ship the Product Report', mins: 120, difficulty: 'Advanced', status: 'locked',
+        concept: 'Day five is the capstone. Consolidate the Product Map, the Money Flow Test Sheet, the Portal Architecture note, and the Cross Product Test Suite into one Product Report leadership can act on this week. Executive summary at the top, ranked bug list in the middle, thirty day fix plan at the end. Ship it to Talha.',
+        keyConcepts: [
+          'A capstone report leads with the top three risks in plain English, before any table.',
+          'A ranked bug list names the actor, the product, the severity, and a one line fix.',
+          'A thirty day fix plan groups fixes into week one (blockers), week two (majors), weeks three and four (polish and prevention).',
+        ],
+        videoLabel: 'Capstone walkthrough',
+        practice: {
+          title: 'Ship the InstaSpace Product Report', mins: 60, difficulty: 'Advanced', capstone: true,
+          brief: 'This is your capstone. Use the prompt below to consolidate the week into one report Talha can hand to the CEO on Monday.',
+          promptTemplate: 'I have four artefacts from this week for InstaSpace: 1) a Product Map of every webapp surface by audience, 2) a Money Flow Test Sheet with a ranked bug list, 3) a Learning Portal Architecture note, and 4) a Cross Product Test Suite of 20+ cases with observed results.\n\nConsolidate them into a single InstaSpace Product Report for leadership. Include:\n1. An executive summary naming the top three risks in plain English\n2. A ranked bug list (actor, product, severity, one line fix)\n3. A thirty day fix plan split into week one blockers, week two majors, weeks three and four polish\n4. A short note on the Learning Portal itself, what works and what would help the next intern cohort\n5. A one paragraph recommendation on the single next thing to build\n\nWrite it in the InstaSpace voice, confident, precise, quietly premium, no hype and no dashes as punctuation. Format it as a clean two to three page report for Talha, Osman, and Jybran.',
+          task: [
+            'Run the capstone prompt and produce the first draft of the report',
+            'Cross check every bug in the report against your actual test suite results',
+            'Tighten the executive summary until anyone on leadership could read it in one minute',
+            'Ship the finished report to Talha and mark this course complete',
+          ],
+          success: [
+            'A two to three page report with an executive summary and a thirty day plan',
+            'A ranked bug list where every row names actor, product, severity, and a fix',
+            'A recommendation on the single next thing to build',
+          ],
+          reward: { badge: 'Product Report Author', note: 'You shipped a Product Report leadership can act on this week. That is the kind of work that turns an intern into a specialist.' },
         },
       },
     ],

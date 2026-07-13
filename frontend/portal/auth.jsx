@@ -194,10 +194,10 @@ function ChangePassword({ user, onDone, onLogout }){
 /* Leadership + mentor landing. Honest placeholder: the live intern progress
    dashboard is the next build. Shows the roster we provisioned, no fake data. */
 const INTERN_ROSTER = [
-  { name:'Mesum',          title:'SEO & Backlinks',    badge:'ME' },
-  { name:'Shahzaib Nasir', title:'Design & Video',     badge:'SN' },
-  { name:'Umair Aziz',     title:'QA, No-code & SEO',  badge:'UA' },
-  { name:'Abdullah',       title:'QA & SEO',           badge:'AB' },
+  { name:'Mesum',          title:'SEO & Backlinks',        badge:'ME' },
+  { name:'Shahzaib Nasir', title:'Design & Video',         badge:'SN' },
+  { name:'Umair Aziz',     title:'InstaSpace App Mastery', badge:'UA' },
+  { name:'Abdullah',       title:'InstaSpace App Mastery', badge:'AB' },
 ];
 
 function LeadershipLanding({ user, onLogout }){
