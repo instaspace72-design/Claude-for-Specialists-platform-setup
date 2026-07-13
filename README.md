@@ -103,6 +103,7 @@ forces the user to set a new password.
 | `osman@myinstaspace.com` | leadership | CEO |
 | `jybran@myinstaspace.com` | leadership | COO |
 | `talha@myinstaspace.com` | leadership | CPO |
+| `ayesha@myinstaspace.com` | leadership | Project Manager |
 
 Interns land in the learning portal; leadership lands on a roster view (the
 live progress dashboard is the next build). Override the default with

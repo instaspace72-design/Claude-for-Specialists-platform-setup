@@ -164,6 +164,7 @@ const SEED_USERS = [
   { email: 'osman@myinstaspace.com',    name: 'Osman',         first: 'Osman',    role: 'leadership', title: 'CEO',                   track: null },
   { email: 'jybran@myinstaspace.com',   name: 'Jybran',        first: 'Jybran',   role: 'leadership', title: 'COO',                   track: null },
   { email: 'talha@myinstaspace.com',    name: 'Talha',         first: 'Talha',    role: 'leadership', title: 'CPO',                   track: null },
+  { email: 'ayesha@myinstaspace.com',   name: 'Ayesha',        first: 'Ayesha',   role: 'leadership', title: 'Project Manager',       track: null },
 ];
 
 function seedUsers() {
