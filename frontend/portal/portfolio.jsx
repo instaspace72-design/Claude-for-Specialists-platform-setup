@@ -56,6 +56,86 @@ function ArtefactCard({ a, i }){
   );
 }
 
+function CopyBlock({ label, text }){
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    try { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1600); } catch (e) { /* blocked */ }
+  };
+  return (
+    <div className="surface" style={{ padding:'16px 20px', background:'var(--aubergine-deep)' }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+        <div className="eyebrow" style={{ margin:0 }}>{label}</div>
+        <button onClick={copy} className="mono" style={{ background:'none', border:'1px solid rgba(245,239,232,.18)', color:'rgba(245,239,232,.7)',
+          borderRadius:'var(--r-pill)', padding:'5px 12px', fontSize:10.5, letterSpacing:'.08em', cursor:'pointer' }}>{copied ? 'COPIED' : 'COPY'}</button>
+      </div>
+      <div className="c82" style={{ fontSize:14, lineHeight:1.6, whiteSpace:'pre-wrap', fontWeight:500 }}>{text}</div>
+    </div>
+  );
+}
+
+function CareerKit(){
+  const [kit, setKit] = useState(null);
+  const [generatedAt, setGeneratedAt] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    window.authFetch('/api/career/kit')
+      .then(r => r.json())
+      .then(d => { if (d && d.kit) { setKit(d.kit); setGeneratedAt(d.generatedAt); } })
+      .catch(() => {});
+  }, []);
+
+  const generate = async () => {
+    if (busy) return;
+    setBusy(true); setError('');
+    try {
+      const res = await window.authFetch('/api/career/kit', { method:'POST' });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.hint || d.error || `Failed (${res.status})`);
+      setKit(d.kit); setGeneratedAt(d.generatedAt);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="reveal surface" style={{ marginTop:26, padding:'22px 26px', animationDelay:'.14s' }}>
+      <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom: kit ? 18 : 0 }}>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div className="eyebrow" style={{ color:'var(--accent)', marginBottom:4 }}>Career kit</div>
+          <div style={{ fontWeight:800, fontSize:17, letterSpacing:'-0.01em' }}>
+            Your record, written for a hiring manager.
+          </div>
+          <div className="c70" style={{ fontSize:13, marginTop:3, lineHeight:1.5 }}>
+            CV bullets, a LinkedIn summary, and interview talking points, generated only from work you actually passed.
+            {generatedAt && <span className="mono c35" style={{ fontSize:11 }}> · Last generated {String(generatedAt).slice(0, 10)}</span>}
+          </div>
+        </div>
+        <button className="btn btn-primary" onClick={generate} disabled={busy} style={{ padding:'10px 20px', fontSize:13, opacity: busy ? .6 : 1, whiteSpace:'nowrap' }}>
+          {busy ? 'Generating…' : kit ? 'Regenerate' : 'Generate my kit'}
+        </button>
+      </div>
+      {error && (
+        <div style={{ display:'flex', gap:8, alignItems:'center', padding:'10px 13px', marginTop:12,
+          borderRadius:'var(--r-md)', background:'rgba(209,30,76,.14)', border:'1px solid rgba(209,30,76,.4)' }}>
+          <span style={{ color:'var(--crimson)', fontWeight:900 }}>!</span>
+          <span className="c94" style={{ fontSize:13 }}>{error}</span>
+        </div>
+      )}
+      {kit && (
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          <CopyBlock label="CV bullets" text={(kit.cv_bullets || []).map(b => `• ${b}`).join('\n')} />
+          <CopyBlock label="LinkedIn summary" text={kit.linkedin_summary || ''} />
+          <CopyBlock label="Interview talking points" text={(kit.talking_points || []).map((t, i) => `${i + 1}. ${t}`).join('\n')} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Portfolio(){
   const [artefacts, setArtefacts] = useState(null);
   const [error, setError] = useState('');
@@ -79,7 +159,9 @@ function Portfolio(){
           This is the page you open in your next interview.
         </p>
 
-        <div style={{ marginTop:32, display:'flex', flexDirection:'column', gap:12 }}>
+        <CareerKit />
+
+        <div style={{ marginTop:26, display:'flex', flexDirection:'column', gap:12 }}>
           {error && (
             <div className="reveal" style={{ display:'flex', gap:10, alignItems:'center', padding:'14px 18px',
               borderRadius:'var(--r-md)', background:'rgba(209,30,76,.14)', border:'1px solid rgba(209,30,76,.4)' }}>

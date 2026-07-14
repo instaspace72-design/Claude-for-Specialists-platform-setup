@@ -177,7 +177,7 @@ function LeadershipDashboard({ user, onLogout }){
               <SummaryTile label="Avg Completion" value={summary.avgCompletion + '%'} />
             </div>
 
-            {starIntern && ratings.star.overall != null && (
+            {starIntern && ratings.star.composite != null && (
               <div className="reveal surface" style={{
                 marginTop:26, padding:'18px 22px', display:'flex', alignItems:'center', gap:16,
                 background:'linear-gradient(135deg, rgba(242,98,46,.16), rgba(209,30,76,.10))',
@@ -197,11 +197,16 @@ function LeadershipDashboard({ user, onLogout }){
                   <div className="c70" style={{ fontSize:13, marginTop:2 }}>
                     {starIntern.title} · rated by {ratings.star.leaders} leader{ratings.star.leaders === 1 ? '' : 's'}
                   </div>
+                  <div className="mono" style={{ fontSize:11, letterSpacing:'.06em', marginTop:8, color:'rgba(245,239,232,.6)' }}>
+                    KPI {ratings.star.overall != null ? ratings.star.overall.toFixed(1) : '—'} (60%)
+                    {' · '}{ratings.star.minutes || 0} active min (25%)
+                    {' · '}{ratings.star.passed || 0} passed + {ratings.star.artefacts || 0} artefacts (15%)
+                  </div>
                 </div>
                 <div style={{ textAlign:'right' }}>
-                  <div className="mono" style={{ fontSize:10, letterSpacing:'.2em', color:'rgba(245,239,232,.5)' }}>OVERALL</div>
+                  <div className="mono" style={{ fontSize:10, letterSpacing:'.2em', color:'rgba(245,239,232,.5)' }}>WEIGHTED</div>
                   <div style={{ fontWeight:900, fontSize:32, letterSpacing:'-0.02em', color:'var(--accent)' }}>
-                    {ratings.star.overall.toFixed(1)}
+                    {ratings.star.composite.toFixed(1)}
                   </div>
                 </div>
                 <button

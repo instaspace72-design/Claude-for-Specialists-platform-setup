@@ -201,6 +201,27 @@ db.serialize(() => {
     body TEXT NOT NULL,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`);
+
+  // Verifiable completion certificates. Issued server side only after every
+  // lesson of the course is completed; checkable by anyone at /verify/:certId.
+  db.run(`CREATE TABLE IF NOT EXISTS certificates (
+    cert_id TEXT PRIMARY KEY,
+    student_id TEXT NOT NULL,
+    student_name TEXT,
+    course_id TEXT NOT NULL,
+    course_title TEXT,
+    badge TEXT,
+    issued_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(student_id, course_id)
+  )`);
+
+  // The latest generated career kit per learner (CV bullets, LinkedIn
+  // summary, interview talking points), built from their real record.
+  db.run(`CREATE TABLE IF NOT EXISTS career_kits (
+    student_id TEXT PRIMARY KEY,
+    kit_json TEXT NOT NULL,
+    generated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  )`);
 });
 
 function seedContextDocuments() {
@@ -836,6 +857,76 @@ app.get('/api/artefacts/me', requireAuth, async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// Career kit: CV bullets, a LinkedIn summary, and interview talking points
+// generated from the learner's REAL record (grades, artefacts, hours). No
+// record, no kit; the generator refuses to invent experience.
+// ---------------------------------------------------------------------------
+app.get('/api/career/kit', requireAuth, async (req, res) => {
+  try {
+    const row = await dbGet('SELECT kit_json, generated_at FROM career_kits WHERE student_id = ?', [req.user.email]);
+    if (!row) return res.json({ kit: null });
+    res.json({ kit: JSON.parse(row.kit_json), generatedAt: row.generated_at });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/career/kit', requireAuth, async (req, res) => {
+  if (!anthropic) {
+    return res.status(503).json({ error: 'Claude is not configured', hint: 'Set CLAUDE_API_KEY in .env, then restart.' });
+  }
+  try {
+    const email = req.user.email;
+    const [passedSubs, artefacts, total, completions, cert] = await Promise.all([
+      dbAll('SELECT exercise_id, feedback, submitted_at FROM exercise_submissions WHERE student_id = ? AND passed = 1 ORDER BY submitted_at DESC LIMIT 10', [email]),
+      dbAll('SELECT name, exercise_id, substr(body, 1, 400) AS excerpt, created_at FROM artefacts WHERE student_id = ? ORDER BY created_at DESC LIMIT 8', [email]),
+      dbGet('SELECT COALESCE(SUM(active_ms),0) AS ms FROM learn_sessions WHERE student_id = ?', [email]),
+      dbGet('SELECT COUNT(*) AS n FROM lesson_completions WHERE student_id = ?', [email]),
+      dbGet('SELECT cert_id, course_title FROM certificates WHERE student_id = ? ORDER BY issued_at DESC LIMIT 1', [email]),
+    ]);
+    if (!passedSubs.length && !artefacts.length) {
+      return res.status(403).json({ error: 'Nothing to build from yet. Pass at least one graded exercise first, the kit is generated from real work only.' });
+    }
+    const hours = Math.round((((total && total.ms) || 0)) / 3600000 * 10) / 10;
+    const record = [
+      `Name: ${req.user.name}. Track: ${req.user.title}. Program: InstaSpace Claude for Specialists (AI assisted ${req.user.title} training on a real short term rental trust platform for the UAE and Maldives).`,
+      `Measured active learning hours: ${hours}. Lessons completed: ${(completions && completions.n) || 0}. Graded exercises passed: ${passedSubs.length}.`,
+      cert ? `Verified certificate: ${cert.cert_id} (${cert.course_title}).` : 'No certificate issued yet.',
+      '',
+      'Passed graded work (grader feedback quoted):',
+      ...passedSubs.map((s) => `- ${s.exercise_id}: ${String(s.feedback || '').slice(0, 200)}`),
+      '',
+      'Portfolio artefacts (excerpts):',
+      ...artefacts.map((a) => `- ${a.name}: ${String(a.excerpt || '').replace(/\s+/g, ' ').slice(0, 250)}`),
+    ].join('\n');
+
+    const response = await anthropic.messages.create({
+      model: GRADER_MODEL,
+      max_tokens: 1800,
+      system: `You turn a junior specialist's REAL training record into career materials. Strict rules: never invent experience, numbers, tools, or outcomes that are not in the record. Ground every bullet in the actual artefacts and graded work. Write plainly and confidently, no hype words, never dashes as punctuation. The reader is a hiring manager at a serious company.
+
+Return ONLY valid JSON, exactly this shape:
+{"cv_bullets":["4 to 6 achievement bullets for a CV, each starting with a strong verb"],"linkedin_summary":"a first person 80 to 120 word summary","talking_points":["5 short interview talking points, each naming a real artefact or graded exercise and what it proves"]}`,
+      messages: [{ role: 'user', content: record }],
+    });
+    const text = response.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n');
+    const kit = extractJson(text);
+    if (!kit || !Array.isArray(kit.cv_bullets)) {
+      return res.status(502).json({ error: 'Generator returned an unreadable result. Try again.' });
+    }
+    await dbRun(
+      `INSERT INTO career_kits (student_id, kit_json, generated_at) VALUES (?,?,CURRENT_TIMESTAMP)
+       ON CONFLICT(student_id) DO UPDATE SET kit_json = excluded.kit_json, generated_at = CURRENT_TIMESTAMP`,
+      [email, JSON.stringify(kit)]
+    );
+    res.json({ kit, generatedAt: new Date().toISOString() });
+  } catch (err) {
+    console.error('[career] error:', err.message);
+    res.status(502).json({ error: 'Career kit generation failed', detail: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // Progress + submissions (SQLite)
 // ---------------------------------------------------------------------------
 // Real progress for the signed in student, read on every page load. Must be
@@ -968,17 +1059,113 @@ app.get('/api/leadership/overview', requireAuth, async (req, res) => {
   }
 });
 
-// Mark a lesson complete for the signed in student. Called by the frontend
-// only after a graded, passed submission.
+// Mark a lesson complete for the signed in student. Server enforced: there
+// must be a passed submission for this lesson (or a passed submission in the
+// last 30 minutes, covering courses whose exercise ids differ from lesson ids,
+// e.g. Airtable hydrated content). A curl call with no real pass is rejected.
 app.post('/api/lessons/complete', requireAuth, async (req, res) => {
   const { lessonId, courseId = null } = req.body || {};
   if (!lessonId) return res.status(400).json({ error: 'lessonId is required' });
   try {
+    const proof = await dbGet(
+      `SELECT id FROM exercise_submissions
+        WHERE student_id = ? AND passed = 1
+          AND (exercise_id = ? OR submitted_at >= datetime('now','-30 minutes'))
+        LIMIT 1`,
+      [req.user.email, String(lessonId)]
+    );
+    if (!proof) {
+      return res.status(403).json({ error: 'No passed submission found for this lesson. Pass the graded exercise first.' });
+    }
     await dbRun('INSERT OR IGNORE INTO lesson_completions (student_id, course_id, lesson_id) VALUES (?,?,?)', [req.user.email, courseId, String(lessonId)]);
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// ---------------------------------------------------------------------------
+// Verifiable certificates. Issue requires every named lesson completed; the
+// public verify page lets anyone check a certificate id is real.
+// ---------------------------------------------------------------------------
+app.post('/api/certificates/issue', requireAuth, async (req, res) => {
+  const { courseId, courseTitle, badge, lessonIds } = req.body || {};
+  if (!courseId || !Array.isArray(lessonIds) || !lessonIds.length) {
+    return res.status(400).json({ error: 'courseId and lessonIds are required' });
+  }
+  try {
+    const existing = await dbGet('SELECT cert_id, issued_at FROM certificates WHERE student_id = ? AND course_id = ?', [req.user.email, String(courseId)]);
+    if (existing) return res.json({ certId: existing.cert_id, issuedAt: existing.issued_at, alreadyIssued: true });
+
+    const placeholders = lessonIds.map(() => '?').join(',');
+    const row = await dbGet(
+      `SELECT COUNT(DISTINCT lesson_id) AS n FROM lesson_completions WHERE student_id = ? AND lesson_id IN (${placeholders})`,
+      [req.user.email, ...lessonIds.map(String)]
+    );
+    if (!row || row.n < lessonIds.length) {
+      return res.status(403).json({ error: `Course not complete: ${row ? row.n : 0} of ${lessonIds.length} lessons done.` });
+    }
+
+    const certId = `IS-${new Date().getUTCFullYear()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+    await dbRun(
+      'INSERT INTO certificates (cert_id, student_id, student_name, course_id, course_title, badge) VALUES (?,?,?,?,?,?)',
+      [certId, req.user.email, req.user.name, String(courseId), String(courseTitle || ''), String(badge || '')]
+    );
+    res.json({ certId, issuedAt: new Date().toISOString(), alreadyIssued: false });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Public verification page. No auth: this is the link on the certificate.
+app.get('/verify/:certId', async (req, res) => {
+  const certId = String(req.params.certId || '').trim().toUpperCase();
+  let cert = null;
+  try { cert = await dbGet('SELECT * FROM certificates WHERE cert_id = ?', [certId]); } catch (e) { /* render invalid */ }
+  let extra = { artefacts: 0, passed: 0 };
+  if (cert) {
+    try {
+      const [a, p] = await Promise.all([
+        dbGet('SELECT COUNT(*) AS n FROM artefacts WHERE student_id = ?', [cert.student_id]),
+        dbGet('SELECT COUNT(*) AS n FROM exercise_submissions WHERE student_id = ? AND passed = 1', [cert.student_id]),
+      ]);
+      extra = { artefacts: (a && a.n) || 0, passed: (p && p.n) || 0 };
+    } catch (e) { /* keep zeros */ }
+  }
+  const esc = (s) => String(s || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const body = cert
+    ? `<div class="card ok">
+        <div class="tag">VALID CERTIFICATE</div>
+        <h1>${esc(cert.student_name)}</h1>
+        <p class="course">${esc(cert.course_title)}</p>
+        <div class="meta">
+          <div><span>Certificate</span>${esc(cert.cert_id)}</div>
+          <div><span>Issued</span>${esc(String(cert.issued_at).slice(0, 10))}</div>
+          <div><span>Graded exercises passed</span>${extra.passed}</div>
+          <div><span>Portfolio artefacts</span>${extra.artefacts}</div>
+        </div>
+        <p class="note">Issued by the InstaSpace Claude for Specialists program. Every lesson was completed through strictly graded, hands on exercises.</p>
+      </div>`
+    : `<div class="card bad">
+        <div class="tag bad">NOT FOUND</div>
+        <h1>Unknown certificate</h1>
+        <p class="course">The id "${esc(certId)}" does not match any certificate issued by this program.</p>
+      </div>`;
+  res.status(cert ? 200 : 404).send(`<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Certificate verification · InstaSpace</title>
+<style>
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#120822;font-family:system-ui,sans-serif;color:#F5EFE8;padding:24px;box-sizing:border-box}
+  .card{max-width:560px;width:100%;background:#2A1240;border-radius:18px;padding:40px 44px;border:1px solid rgba(245,239,232,.12)}
+  .tag{display:inline-block;font-size:11px;letter-spacing:.2em;font-weight:700;color:#120822;background:linear-gradient(135deg,#F2622E,#D11E4C);padding:5px 12px;border-radius:999px;margin-bottom:18px}
+  .tag.bad{background:#D11E4C;color:#F5EFE8}
+  h1{margin:0 0 6px;font-size:34px;letter-spacing:-0.02em}
+  .course{margin:0 0 22px;font-size:16px;color:rgba(245,239,232,.75);font-style:italic}
+  .meta{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+  .meta div{background:#1E0C30;border-radius:10px;padding:12px 14px;font-size:15px;font-weight:700}
+  .meta span{display:block;font-size:10px;letter-spacing:.16em;color:rgba(245,239,232,.5);font-weight:400;text-transform:uppercase;margin-bottom:4px}
+  .note{font-size:13px;line-height:1.6;color:rgba(245,239,232,.6);margin:0}
+</style></head><body>${body}</body></html>`);
 });
 
 // ---------------------------------------------------------------------------
@@ -1185,39 +1372,62 @@ app.post('/api/leadership/interns', requireAuth, requireLeadership, (req, res) =
   );
 });
 
-// All ratings + averages for a period, plus the star of the month (highest
-// overall average across leaders). Leadership only.
-app.get('/api/leadership/ratings', requireAuth, requireLeadership, (req, res) => {
+// All ratings + averages for a period, plus the star of the month. The star
+// is a weighted composite, not sliders alone: 60% leader KPI average, 25%
+// measured active hours this month (target 20h), 15% real output (passed
+// exercises and saved artefacts this month).
+const STAR_TARGET_MINUTES = Number(process.env.STAR_TARGET_MINUTES || 1200);
+
+app.get('/api/leadership/ratings', requireAuth, requireLeadership, async (req, res) => {
   const period = String(req.query.period || currentPeriod());
-  db.all(
-    `SELECT r.*, u.name AS leader_name, u.title AS leader_title
-       FROM intern_ratings r
-       LEFT JOIN users u ON u.email = r.leader_email
-       WHERE r.period = ?`,
-    [period],
-    (err, rows) => {
-      if (err) return res.status(500).json({ error: err.message });
-      const byIntern = {};
-      rows.forEach((r) => {
-        const list = byIntern[r.intern_email] || (byIntern[r.intern_email] = []);
-        list.push(r);
+  try {
+    const rows = await dbAll(
+      `SELECT r.*, u.name AS leader_name, u.title AS leader_title
+         FROM intern_ratings r
+         LEFT JOIN users u ON u.email = r.leader_email
+         WHERE r.period = ?`,
+      [period]
+    );
+    const byIntern = {};
+    rows.forEach((r) => {
+      const list = byIntern[r.intern_email] || (byIntern[r.intern_email] = []);
+      list.push(r);
+    });
+    const summary = [];
+    for (const email of Object.keys(byIntern)) {
+      const list = byIntern[email];
+      const kpi = {};
+      KPI_FIELDS.forEach((f) => {
+        const vals = list.map((r) => r[f]).filter((v) => Number.isFinite(v));
+        kpi[f] = vals.length ? +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2) : null;
       });
-      const summary = Object.keys(byIntern).map((email) => {
-        const list = byIntern[email];
-        const kpi = {};
-        KPI_FIELDS.forEach((f) => {
-          const vals = list.map((r) => r[f]).filter((v) => Number.isFinite(v));
-          kpi[f] = vals.length ? +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2) : null;
-        });
-        const scored = KPI_FIELDS.map((f) => kpi[f]).filter((v) => v !== null);
-        const overall = scored.length ? +(scored.reduce((a, b) => a + b, 0) / scored.length).toFixed(2) : null;
-        return { intern_email: email, kpi, overall, leaders: list.length };
+      const scored = KPI_FIELDS.map((f) => kpi[f]).filter((v) => v !== null);
+      const overall = scored.length ? +(scored.reduce((a, b) => a + b, 0) / scored.length).toFixed(2) : null;
+
+      const [mins, passed, arts] = await Promise.all([
+        dbGet("SELECT COALESCE(SUM(active_ms),0) AS ms FROM learn_sessions WHERE student_id = ? AND strftime('%Y-%m', started_at) = ?", [email, period]),
+        dbGet("SELECT COUNT(*) AS n FROM exercise_submissions WHERE student_id = ? AND passed = 1 AND strftime('%Y-%m', submitted_at) = ?", [email, period]),
+        dbGet("SELECT COUNT(*) AS n FROM artefacts WHERE student_id = ? AND strftime('%Y-%m', created_at) = ?", [email, period]),
+      ]);
+      const minutes = Math.round((((mins && mins.ms) || 0)) / 60000);
+      const passedN = (passed && passed.n) || 0;
+      const artsN = (arts && arts.n) || 0;
+      const activityScore = +(Math.min(minutes / STAR_TARGET_MINUTES, 1) * 10).toFixed(2);
+      const outputScore = +(Math.min((passedN * 2 + artsN) / 10, 1) * 10).toFixed(2);
+      const composite = overall === null ? null : +((0.6 * overall) + (0.25 * activityScore) + (0.15 * outputScore)).toFixed(2);
+
+      summary.push({
+        intern_email: email, kpi, overall, leaders: list.length,
+        minutes, passed: passedN, artefacts: artsN,
+        activityScore, outputScore, composite,
       });
-      summary.sort((a, b) => (b.overall || 0) - (a.overall || 0));
-      const star = summary.length && summary[0].overall !== null ? summary[0] : null;
-      res.json({ period, ratings: rows, summary, star });
     }
-  );
+    summary.sort((a, b) => (b.composite || 0) - (a.composite || 0));
+    const star = summary.length && summary[0].composite !== null ? summary[0] : null;
+    res.json({ period, ratings: rows, summary, star, weights: { kpi: 0.6, activity: 0.25, output: 0.15 }, targetMinutes: STAR_TARGET_MINUTES });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Upsert one leader's KPI slider values for one intern for the period.

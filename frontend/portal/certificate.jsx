@@ -63,7 +63,29 @@ function Certificate({ user, course, onClose }){
   const courseTitle = (course && course.title) || 'InstaSpace Course';
   const badge = (course && course.lessons && course.lessons.find(l => l.practice && l.practice.reward)?.practice.reward.badge) || 'Specialist';
   const dateStr = formatCertDate(new Date());
-  const certId = certificateId(name, course && course.id);
+
+  // Issue (or fetch) the real, server verified certificate. The server only
+  // issues when every lesson is completed, so this id is a checkable claim.
+  const [issued, setIssued] = useState(null);
+  useEffect(() => {
+    if (!course || !window.authFetch) return;
+    window.authFetch('/api/certificates/issue', {
+      method: 'POST',
+      body: JSON.stringify({
+        courseId: course.id,
+        courseTitle: course.title,
+        badge,
+        lessonIds: course.lessons.map(l => l.id),
+      }),
+    })
+      .then(r => r.json())
+      .then(d => { if (d && d.certId) setIssued(d); })
+      .catch(() => {});
+  }, [course && course.id]);
+
+  const certId = (issued && issued.certId) || certificateId(name, course && course.id);
+  const apiBase = (typeof window.PORTAL_API === 'string' && window.PORTAL_API) ? window.PORTAL_API : location.origin;
+  const verifyUrl = `${apiBase}/verify/${certId}`;
 
   const print = () => { try { window.print(); } catch (e) { /* ignore */ } };
 
@@ -200,6 +222,12 @@ function Certificate({ user, course, onClose }){
                   <div className="mono" style={{ fontSize:10, letterSpacing:'.14em', color:'rgba(42,18,64,.55)' }}>CPO · INSTASPACE</div>
                 </div>
               </div>
+            </div>
+
+            <div className="mono" style={{ marginTop:22, fontSize:10.5, letterSpacing:'.12em', color:'rgba(42,18,64,.55)' }}>
+              {issued
+                ? <span>VERIFY THIS CERTIFICATE · <span style={{ color:'var(--crimson)', fontWeight:700 }}>{verifyUrl}</span></span>
+                : <span>ISSUING VERIFIED CERTIFICATE…</span>}
             </div>
           </div>
         </div>
