@@ -128,10 +128,16 @@ function App(){
     }
   }, [user && user.email]);
 
-  // hydrate courses from Airtable if the backend has it configured (no-op otherwise)
+  // hydrate courses from Airtable, then admin published content (custom
+  // courses + prompt overrides), so every learner sees the latest truth
   useEffect(() => {
-    if (!window.loadAirtableCourses) return;
-    window.loadAirtableCourses().then((d) => { if (d) setContentVersion((v) => v + 1); });
+    const run = async () => {
+      let changed = false;
+      if (window.loadAirtableCourses) changed = !!(await window.loadAirtableCourses()) || changed;
+      if (window.loadCustomContent) changed = !!(await window.loadCustomContent()) || changed;
+      if (changed) setContentVersion((v) => v + 1);
+    };
+    run();
   }, []);
 
   const enter = (d) => { setDept(d); setPct(pctFor(d)); setScreen('dashboard'); };
@@ -222,6 +228,14 @@ function App(){
     return (
       <React.Fragment>
         <ChangePassword user={user} onLogout={logout} onDone={(u) => setAuth(a => Object.assign({}, a, { user: u }))} />
+        <PortalTweaks t={t} setTweak={setTweak} />
+      </React.Fragment>
+    );
+  }
+  if (user.role === 'admin'){
+    return (
+      <React.Fragment>
+        <AdminPanel user={user} onLogout={logout} />
         <PortalTweaks t={t} setTweak={setTweak} />
       </React.Fragment>
     );

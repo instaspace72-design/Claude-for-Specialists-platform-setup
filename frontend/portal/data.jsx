@@ -3817,3 +3817,45 @@ window.loadAirtableCourses = async function(){
   } catch (e) { /* keep built-in courses */ }
   return null;
 };
+
+// Admin published content: custom courses become real tracks (specialty +
+// course), and active prompt assignments override lesson practice prompts.
+// Called after Airtable hydration so overrides apply to whatever won.
+window.loadCustomContent = async function(){
+  const apiBase = (typeof window.PORTAL_API === 'string') ? window.PORTAL_API : 'http://localhost:3001';
+  let changed = false;
+  try {
+    const res = await fetch(apiBase + '/api/content/custom-courses');
+    if (res.ok){
+      const data = await res.json();
+      (data.courses || []).forEach((payload) => {
+        if (!payload || !payload.specialty || !payload.course) return;
+        const sp = payload.specialty;
+        if (!window.SPECIALTY_BY_TRACK[sp.id]){
+          window.SPECIALTIES.push(sp);
+          window.SPECIALTY_BY_TRACK[sp.id] = sp;
+        } else {
+          Object.assign(window.SPECIALTY_BY_TRACK[sp.id], sp);
+        }
+        window.COURSES[sp.id] = payload.course;
+        changed = true;
+      });
+    }
+  } catch (e) { /* offline, keep built-ins */ }
+  try {
+    const res = await fetch(apiBase + '/api/content/prompt-overrides');
+    if (res.ok){
+      const data = await res.json();
+      const overrides = (data && data.overrides) || {};
+      if (Object.keys(overrides).length){
+        Object.values(window.COURSES).forEach((c) => {
+          (c.lessons || []).forEach((l) => {
+            if (l.practice && overrides[l.id]) { l.practice.promptTemplate = overrides[l.id]; changed = true; }
+          });
+          if (c.exercise && overrides[c.exercise.lessonId]) { c.exercise.promptTemplate = overrides[c.exercise.lessonId]; changed = true; }
+        });
+      }
+    }
+  } catch (e) { /* ignore */ }
+  return changed;
+};

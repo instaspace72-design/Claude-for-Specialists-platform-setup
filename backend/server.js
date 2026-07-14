@@ -99,11 +99,23 @@ async function geminiGenerate(system, messages, maxTokens) {
 }
 
 // One text generation door for every feature. Model override only applies to
-// Claude; Gemini always uses GEMINI_MODEL.
+// Claude; Gemini always uses GEMINI_MODEL. If the Claude key exists but the
+// account is out of credits (or the key is bad), we fall back to Gemini
+// automatically instead of failing the learner.
 async function generateText({ system, messages, maxTokens = 1024, model }) {
   if (anthropic) {
-    const r = await anthropic.messages.create({ model: model || CLAUDE_MODEL, max_tokens: maxTokens, system, messages });
-    return r.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n');
+    try {
+      const r = await anthropic.messages.create({ model: model || CLAUDE_MODEL, max_tokens: maxTokens, system, messages });
+      return r.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n');
+    } catch (err) {
+      const msg = String(err.message || '');
+      const billingOrAuth = /credit balance|billing|authentication_error|invalid x-api-key|401|Your credit/i.test(msg);
+      if (billingOrAuth && geminiReady) {
+        console.warn('[ai] Claude unavailable (billing/auth), falling back to Gemini:', msg.slice(0, 120));
+        return geminiGenerate(system, messages, maxTokens);
+      }
+      throw err;
+    }
   }
   if (geminiReady) return geminiGenerate(system, messages, maxTokens);
   const err = new Error('No AI provider configured');
@@ -273,7 +285,47 @@ db.serialize(() => {
     kit_json TEXT NOT NULL,
     generated_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`);
+
+  // Admin authored courses, published into the portal alongside the built in
+  // and Airtable content. course_json holds the same shape data.jsx uses,
+  // plus a `specialty` block so new tracks route correctly.
+  db.run(`CREATE TABLE IF NOT EXISTS custom_courses (
+    dept_id TEXT PRIMARY KEY,
+    course_json TEXT NOT NULL,
+    published INTEGER DEFAULT 0,
+    created_by TEXT,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  )`);
+
+  // Prompt library. A prompt optionally overrides one lesson's practice
+  // prompt in the portal (assignment by lesson id).
+  db.run(`CREATE TABLE IF NOT EXISTS prompts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    code TEXT,
+    category TEXT,
+    difficulty INTEGER,
+    body TEXT NOT NULL,
+    tags TEXT,
+    lesson_id TEXT,
+    active INTEGER DEFAULT 1,
+    created_by TEXT,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  )`);
+
+  // Every admin action, for the audit trail the requirements call for.
+  db.run(`CREATE TABLE IF NOT EXISTS audit_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    admin_email TEXT NOT NULL,
+    action TEXT NOT NULL,
+    detail TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  )`);
 });
+
+function logAdmin(email, action, detail) {
+  db.run('INSERT INTO audit_log (admin_email, action, detail) VALUES (?,?,?)', [email, action, String(detail || '').slice(0, 500)]);
+}
 
 function seedContextDocuments() {
   const docPath = path.join(__dirname, '..', 'config', 'instaspace-context.md');
@@ -333,6 +385,7 @@ const SEED_USERS = [
   { email: 'jybran@myinstaspace.com',   name: 'Jybran',        first: 'Jybran',   role: 'leadership', title: 'COO',                     track: null },
   { email: 'talha@myinstaspace.com',    name: 'Talha',         first: 'Talha',    role: 'leadership', title: 'CPO',                     track: null },
   { email: 'ayesha@myinstaspace.com',   name: 'Ayesha',        first: 'Ayesha',   role: 'leadership', title: 'Project Manager',         track: null },
+  { email: 'admin@myinstaspace.com',    name: 'Portal Admin',  first: 'Admin',    role: 'admin',      title: 'Super Admin',             track: null },
 ];
 
 function seedUsers() {
@@ -1669,6 +1722,352 @@ app.get('/api/leadership/report/:internEmail', requireAuth, requireLeadership, (
       }
     );
   });
+});
+
+// ---------------------------------------------------------------------------
+// Admin panel API. Super admin role only; every mutation is audit logged.
+// ---------------------------------------------------------------------------
+function requireAdmin(req, res, next) {
+  if (req.user && req.user.role === 'admin') return next();
+  return res.status(403).json({ error: 'Admin access only' });
+}
+
+// Dashboard: real stats + a live activity feed built from real tables.
+app.get('/api/admin/overview', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const [interns, leaders, custom, prompts, passed, certs, arts, minutes] = await Promise.all([
+      dbGet("SELECT COUNT(*) AS n FROM users WHERE role = 'intern'"),
+      dbGet("SELECT COUNT(*) AS n FROM users WHERE role = 'leadership'"),
+      dbGet('SELECT COUNT(*) AS n FROM custom_courses WHERE published = 1'),
+      dbGet('SELECT COUNT(*) AS n FROM prompts WHERE active = 1'),
+      dbGet('SELECT COUNT(*) AS n FROM exercise_submissions WHERE passed = 1'),
+      dbGet('SELECT COUNT(*) AS n FROM certificates'),
+      dbGet('SELECT COUNT(*) AS n FROM artefacts'),
+      dbGet('SELECT COALESCE(SUM(active_ms),0) AS ms FROM learn_sessions'),
+    ]);
+    const events = await dbAll(`
+      SELECT * FROM (
+        SELECT 'submission' AS type, student_id AS who, exercise_id AS what,
+               CASE passed WHEN 1 THEN 'passed' ELSE 'did not pass' END AS outcome, submitted_at AS at
+          FROM exercise_submissions
+        UNION ALL
+        SELECT 'lesson', student_id, lesson_id, 'completed', completed_at FROM lesson_completions
+        UNION ALL
+        SELECT 'certificate', student_id, course_title, cert_id, issued_at FROM certificates
+        UNION ALL
+        SELECT 'artefact', student_id, name, 'saved', created_at FROM artefacts
+        UNION ALL
+        SELECT 'note', leader_email, substr(body, 1, 60), 'noted', created_at FROM intern_notes
+      ) ORDER BY at DESC LIMIT 20`);
+    res.json({
+      stats: {
+        interns: interns.n, leadership: leaders.n,
+        customCourses: custom.n, prompts: prompts.n,
+        exercisesPassed: passed.n, certificates: certs.n, artefacts: arts.n,
+        totalActiveHours: Math.round(((minutes && minutes.ms) || 0) / 3600000 * 10) / 10,
+      },
+      activity: events,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---- Users: full CRUD, any role ----
+app.get('/api/admin/users', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const users = await dbAll('SELECT email, name, first_name, role, title, track, must_change_password, created_at FROM users ORDER BY role, name');
+    res.json({ users });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/users', requireAuth, requireAdmin, async (req, res) => {
+  const { email, name, role = 'intern', title = '', track = null } = req.body || {};
+  const cleanEmail = String(email || '').trim().toLowerCase();
+  const cleanName = String(name || '').trim();
+  if (!cleanEmail || !cleanName) return res.status(400).json({ error: 'Email and name are required' });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) return res.status(400).json({ error: 'Enter a valid email' });
+  if (!['intern', 'leadership', 'admin'].includes(role)) return res.status(400).json({ error: 'Role must be intern, leadership, or admin' });
+  const { salt, hash } = hashPassword(DEFAULT_PASSWORD);
+  try {
+    await dbRun(
+      `INSERT INTO users (email, name, first_name, role, title, track, salt, password_hash, must_change_password) VALUES (?,?,?,?,?,?,?,?,1)`,
+      [cleanEmail, cleanName, cleanName.split(/\s+/)[0], role, String(title), track ? String(track) : null, salt, hash]
+    );
+    logAdmin(req.user.email, 'user.create', `${cleanEmail} (${role})`);
+    res.json({ ok: true, defaultPassword: DEFAULT_PASSWORD });
+  } catch (err) {
+    if (/UNIQUE/.test(err.message)) return res.status(409).json({ error: 'That email already exists' });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch('/api/admin/users/:email', requireAuth, requireAdmin, async (req, res) => {
+  const email = String(req.params.email || '').trim().toLowerCase();
+  const { name, role, title, track } = req.body || {};
+  try {
+    const u = await dbGet('SELECT * FROM users WHERE email = ?', [email]);
+    if (!u) return res.status(404).json({ error: 'User not found' });
+    if (role && !['intern', 'leadership', 'admin'].includes(role)) return res.status(400).json({ error: 'Bad role' });
+    if (u.role === 'admin' && role && role !== 'admin') {
+      const admins = await dbGet("SELECT COUNT(*) AS n FROM users WHERE role = 'admin'");
+      if (admins.n <= 1) return res.status(400).json({ error: 'Cannot demote the last admin' });
+    }
+    const next = {
+      name: name !== undefined ? String(name) : u.name,
+      role: role || u.role,
+      title: title !== undefined ? String(title) : u.title,
+      track: track !== undefined ? (track ? String(track) : null) : u.track,
+    };
+    await dbRun('UPDATE users SET name = ?, first_name = ?, role = ?, title = ?, track = ? WHERE email = ?',
+      [next.name, next.name.split(/\s+/)[0], next.role, next.title, next.track, email]);
+    logAdmin(req.user.email, 'user.update', `${email} -> ${next.role}/${next.track || 'no track'}`);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/users/:email/reset-password', requireAuth, requireAdmin, async (req, res) => {
+  const email = String(req.params.email || '').trim().toLowerCase();
+  try {
+    const u = await dbGet('SELECT email FROM users WHERE email = ?', [email]);
+    if (!u) return res.status(404).json({ error: 'User not found' });
+    const { salt, hash } = hashPassword(DEFAULT_PASSWORD);
+    await dbRun('UPDATE users SET salt = ?, password_hash = ?, must_change_password = 1 WHERE email = ?', [salt, hash, email]);
+    await dbRun('DELETE FROM sessions WHERE email = ?', [email]);
+    logAdmin(req.user.email, 'user.reset_password', email);
+    res.json({ ok: true, defaultPassword: DEFAULT_PASSWORD });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/admin/users/:email', requireAuth, requireAdmin, async (req, res) => {
+  const email = String(req.params.email || '').trim().toLowerCase();
+  if (email === req.user.email) return res.status(400).json({ error: 'You cannot delete your own account' });
+  try {
+    const u = await dbGet('SELECT role FROM users WHERE email = ?', [email]);
+    if (!u) return res.status(404).json({ error: 'User not found' });
+    if (u.role === 'admin') {
+      const admins = await dbGet("SELECT COUNT(*) AS n FROM users WHERE role = 'admin'");
+      if (admins.n <= 1) return res.status(400).json({ error: 'Cannot delete the last admin' });
+    }
+    await dbRun('DELETE FROM users WHERE email = ?', [email]);
+    await dbRun('DELETE FROM sessions WHERE email = ?', [email]);
+    logAdmin(req.user.email, 'user.delete', email);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---- Courses: enrollment stats, AI conversion from markdown, publish ----
+app.get('/api/admin/course-stats', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const byTrack = await dbAll("SELECT track, COUNT(*) AS interns FROM users WHERE role = 'intern' AND track IS NOT NULL GROUP BY track");
+    const byCourse = await dbAll('SELECT course_id, COUNT(DISTINCT student_id) AS students, COUNT(*) AS completions FROM lesson_completions GROUP BY course_id');
+    const custom = await dbAll('SELECT dept_id, published, created_by, updated_at, length(course_json) AS size FROM custom_courses');
+    res.json({ byTrack, byCourse, custom });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+const COURSE_CONVERT_SYSTEM = `You convert a course document (markdown or plain text) into the InstaSpace learning portal course JSON. Return ONLY valid JSON, no fences, exactly this shape:
+{"specialty":{"id":"<kebab-track-id>","name":"<short track name>","badge":"<2 letters>","tagline":"<under 8 words>","blurb":"<one sentence>"},
+"course":{"id":"<CODE like ABC001>","dept":"<same kebab-track-id>","title":"...","level":"Beginner|Intermediate|Advanced","days":<n>,"instructor":"...","summary":"<one sentence>","objectives":["3 items"],
+"lessons":[{"id":"<CODE>L01","n":1,"title":"...","mins":120,"difficulty":"Novice|Intermediate|Advanced","status":"active","concept":"<3 to 5 sentence lesson intro>","keyConcepts":["3 or 4 items"],"videoLabel":"Lesson walkthrough",
+"mistakes":["3 items, each 'Heading: one or two sentences'"],
+"practice":{"title":"...","mins":45,"difficulty":"Beginner|Intermediate|Advanced","brief":"<one sentence>","promptTemplate":"<the full Claude prompt the learner runs>","task":["4 steps"],"success":["3 criteria"],"reward":{"badge":"<2 or 3 words>","note":"<one sentence>"}}}]}}
+Rules: first lesson status "active", all others "locked". The LAST lesson is the capstone: add "capstone":true inside its practice and make it consolidate the course. Derive everything from the document; do not invent facts that contradict it. Never use dashes as punctuation in any text. If the document has more or fewer than 5 lessons, mirror the document.`;
+
+app.post('/api/admin/courses/convert', requireAuth, requireAdmin, async (req, res) => {
+  const { markdown } = req.body || {};
+  const text = String(markdown || '').trim();
+  if (text.length < 200) return res.status(400).json({ error: 'Paste or upload the full course document (at least a few paragraphs).' });
+  if (aiProvider() === 'none') {
+    return res.status(503).json({ error: 'Course conversion needs an AI provider', hint: NO_PROVIDER_HINT + ' You can still paste course JSON directly.' });
+  }
+  try {
+    const out = await generateText({
+      system: COURSE_CONVERT_SYSTEM,
+      maxTokens: 8000,
+      messages: [{ role: 'user', content: text.slice(0, 60000) }],
+    });
+    const draft = extractJson(out);
+    if (!draft || !draft.course || !Array.isArray(draft.course.lessons) || !draft.course.lessons.length) {
+      return res.status(502).json({ error: 'Conversion returned an unreadable result. Try again, or paste JSON directly.' });
+    }
+    logAdmin(req.user.email, 'course.convert', `${draft.course.id || '?'} from ${text.length} chars`);
+    res.json({ draft });
+  } catch (err) {
+    res.status(502).json({ error: 'Conversion failed', detail: err.message });
+  }
+});
+
+function validateCourse(payload) {
+  const c = payload && payload.course;
+  const s = payload && payload.specialty;
+  if (!s || !s.id || !s.name) return 'specialty.id and specialty.name are required';
+  if (!c || !c.id || !c.title || c.dept !== s.id) return 'course.id, course.title required and course.dept must equal specialty.id';
+  if (!Array.isArray(c.lessons) || !c.lessons.length) return 'course.lessons must be a non-empty array';
+  for (const l of c.lessons) {
+    if (!l.id || !l.title || !l.concept || !Array.isArray(l.keyConcepts)) return `lesson ${l.id || '?'} is missing id, title, concept, or keyConcepts`;
+    if (!l.practice || !l.practice.title || !Array.isArray(l.practice.success) || !l.practice.success.length) return `lesson ${l.id} needs a practice with success criteria (grading depends on them)`;
+  }
+  return null;
+}
+
+app.post('/api/admin/courses', requireAuth, requireAdmin, async (req, res) => {
+  const { payload, publish = true } = req.body || {};
+  const problem = validateCourse(payload);
+  if (problem) return res.status(400).json({ error: problem });
+  try {
+    await dbRun(
+      `INSERT INTO custom_courses (dept_id, course_json, published, created_by, updated_at) VALUES (?,?,?,?,CURRENT_TIMESTAMP)
+       ON CONFLICT(dept_id) DO UPDATE SET course_json = excluded.course_json, published = excluded.published, updated_at = CURRENT_TIMESTAMP`,
+      [payload.specialty.id, JSON.stringify(payload), publish ? 1 : 0, req.user.email]
+    );
+    logAdmin(req.user.email, publish ? 'course.publish' : 'course.save_draft', `${payload.specialty.id} · ${payload.course.title}`);
+    res.json({ ok: true, deptId: payload.specialty.id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/admin/courses/:deptId', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const r = await dbRun('DELETE FROM custom_courses WHERE dept_id = ?', [String(req.params.deptId)]);
+    if (!r.changes) return res.status(404).json({ error: 'No custom course with that id (built in courses cannot be deleted here)' });
+    logAdmin(req.user.email, 'course.delete', req.params.deptId);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---- Prompt library ----
+app.get('/api/admin/prompts', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    res.json({ prompts: await dbAll('SELECT * FROM prompts ORDER BY updated_at DESC') });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/prompts', requireAuth, requireAdmin, async (req, res) => {
+  const { name, code = '', category = '', difficulty = 3, body, tags = '', lessonId = null } = req.body || {};
+  if (!name || !body) return res.status(400).json({ error: 'name and body are required' });
+  try {
+    const r = await dbRun(
+      'INSERT INTO prompts (name, code, category, difficulty, body, tags, lesson_id, created_by) VALUES (?,?,?,?,?,?,?,?)',
+      [String(name), String(code), String(category), Math.max(1, Math.min(5, Number(difficulty) || 3)), String(body), String(tags), lessonId ? String(lessonId) : null, req.user.email]
+    );
+    logAdmin(req.user.email, 'prompt.create', `${name}${lessonId ? ` -> ${lessonId}` : ''}`);
+    res.json({ ok: true, id: r.lastID });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch('/api/admin/prompts/:id', requireAuth, requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  try {
+    const p = await dbGet('SELECT * FROM prompts WHERE id = ?', [id]);
+    if (!p) return res.status(404).json({ error: 'Prompt not found' });
+    const b = req.body || {};
+    await dbRun(
+      'UPDATE prompts SET name=?, code=?, category=?, difficulty=?, body=?, tags=?, lesson_id=?, active=?, updated_at=CURRENT_TIMESTAMP WHERE id=?',
+      [b.name !== undefined ? String(b.name) : p.name,
+       b.code !== undefined ? String(b.code) : p.code,
+       b.category !== undefined ? String(b.category) : p.category,
+       b.difficulty !== undefined ? Math.max(1, Math.min(5, Number(b.difficulty) || 3)) : p.difficulty,
+       b.body !== undefined ? String(b.body) : p.body,
+       b.tags !== undefined ? String(b.tags) : p.tags,
+       b.lessonId !== undefined ? (b.lessonId ? String(b.lessonId) : null) : p.lesson_id,
+       b.active !== undefined ? (b.active ? 1 : 0) : p.active,
+       id]
+    );
+    logAdmin(req.user.email, 'prompt.update', `#${id}`);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/admin/prompts/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const r = await dbRun('DELETE FROM prompts WHERE id = ?', [Number(req.params.id)]);
+    if (!r.changes) return res.status(404).json({ error: 'Prompt not found' });
+    logAdmin(req.user.email, 'prompt.delete', `#${req.params.id}`);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---- Exports (CSV) ----
+function toCsv(rows) {
+  if (!rows.length) return '';
+  const cols = Object.keys(rows[0]);
+  const esc = (v) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+  return [cols.join(','), ...rows.map((r) => cols.map((c) => esc(r[c])).join(','))].join('\n');
+}
+
+app.get('/api/admin/export/:what', requireAuth, requireAdmin, async (req, res) => {
+  const what = String(req.params.what);
+  const queries = {
+    users: "SELECT email, name, role, title, track, created_at FROM users ORDER BY role, name",
+    submissions: 'SELECT student_id, exercise_id, passed, feedback, defence_url, submitted_at FROM exercise_submissions ORDER BY submitted_at DESC',
+    progress: 'SELECT student_id, course_id, lesson_id, completed_at FROM lesson_completions ORDER BY completed_at DESC',
+    time: "SELECT student_id, course_id, lesson_id, screen, started_at, ended_at, active_ms FROM learn_sessions ORDER BY started_at DESC",
+    ratings: 'SELECT intern_email, leader_email, period, time_score, discipline, dedication, willingness, attention, reporting, communication, updated_at FROM intern_ratings',
+  };
+  if (!queries[what]) return res.status(400).json({ error: `Unknown export. Options: ${Object.keys(queries).join(', ')}` });
+  try {
+    const rows = await dbAll(queries[what]);
+    logAdmin(req.user.email, 'export', `${what} (${rows.length} rows)`);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${what}-${new Date().toISOString().slice(0, 10)}.csv"`);
+    res.send(toCsv(rows));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---- Audit log ----
+app.get('/api/admin/audit', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    res.json({ audit: await dbAll('SELECT * FROM audit_log ORDER BY created_at DESC LIMIT 200') });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---- Public (signed in) content: published custom courses + prompt overrides ----
+app.get('/api/content/custom-courses', async (req, res) => {
+  try {
+    const rows = await dbAll('SELECT dept_id, course_json FROM custom_courses WHERE published = 1');
+    const out = [];
+    rows.forEach((r) => { try { out.push(JSON.parse(r.course_json)); } catch (e) { /* skip bad rows */ } });
+    res.json({ courses: out });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/content/prompt-overrides', async (req, res) => {
+  try {
+    const rows = await dbAll('SELECT lesson_id, body FROM prompts WHERE active = 1 AND lesson_id IS NOT NULL ORDER BY updated_at');
+    const overrides = {};
+    rows.forEach((r) => { overrides[r.lesson_id] = r.body; });
+    res.json({ overrides });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ---------------------------------------------------------------------------
