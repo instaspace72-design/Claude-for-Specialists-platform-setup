@@ -77,9 +77,11 @@ function SlideArt({ variant }){
 
 /* Animated, interactive lesson slides (replaces the old video placeholder). */
 function LessonSlides({ lesson, track, practice, onStart }){
-  const variant = ({ seo:'links', design:'palette', 'qa-nocode':'checks', 'qa-seo':'checks' })[track] || 'rings';
+  const variant = ({ seo:'links', design:'palette', 'qa-nocode':'checks', 'qa-seo':'checks', 'webapp-portal':'checks' })[track] || 'rings';
   const concepts = lesson.keyConcepts || [];
+  const mistakes = lesson.mistakes || [];
   const slides = [{ kind:'intro' }].concat(concepts.map((k, n) => Object.assign({ kind:'concept', n: n + 1 }, splitConcept(k))));
+  mistakes.forEach((m, n) => slides.push(Object.assign({ kind:'mistake', n: n + 1, count: mistakes.length }, splitConcept(m))));
   if (practice) slides.push({ kind:'outro' });
   const total = slides.length;
 
@@ -137,12 +139,26 @@ function LessonSlides({ lesson, track, practice, onStart }){
               <p className="c82" style={{ fontSize:16, lineHeight:1.55, fontWeight:500, margin:0 }}>{slide.body}</p>
             </div>
           </React.Fragment>
+        ) : slide.kind === 'mistake' ? (
+          <React.Fragment>
+            <div style={{ width:'40%', display:'flex', justifyContent:'center', alignItems:'center', flexShrink:0 }}>
+              <div style={{ width:110, height:110, borderRadius:'50%', background:'rgba(209,30,76,.14)', border:'2px solid rgba(209,30,76,.5)',
+                display:'flex', alignItems:'center', justifyContent:'center', fontSize:44, color:'var(--crimson)', fontWeight:900 }}>✗</div>
+            </div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div className="eyebrow" style={{ color:'var(--crimson)' }}>How this goes wrong {String(slide.n).padStart(2,'0')} / {slide.count}</div>
+              {slide.head && <h3 style={{ fontWeight:900, fontSize:23, letterSpacing:'-0.02em', margin:'10px 0 10px', lineHeight:1.15 }}>{slide.head}</h3>}
+              <p className="c82" style={{ fontSize:16, lineHeight:1.55, fontWeight:500, margin:0 }}>{slide.body}</p>
+            </div>
+          </React.Fragment>
         ) : slide.kind === 'intro' ? (
           <div style={{ width:'100%', textAlign:'center' }}>
             <div style={{ display:'flex', justifyContent:'center', marginBottom:4 }}><SlideArt variant="rings" /></div>
             <div className="eyebrow" style={{ color:'var(--accent)' }}>Lesson {String(lesson.n).padStart(2,'0')} · {lesson.mins} min</div>
             <h2 style={{ fontWeight:900, fontSize:29, letterSpacing:'-0.03em', margin:'10px 0 6px', lineHeight:1.1 }}>{lesson.title}</h2>
-            <p className="c70" style={{ fontSize:15, fontWeight:500, margin:0 }}>{concepts.length} key ideas, then live practice with Claude</p>
+            <p className="c70" style={{ fontSize:15, fontWeight:500, margin:0 }}>
+              {concepts.length} key ideas{mistakes.length ? `, ${mistakes.length} traps to avoid` : ''}, then live practice with Claude
+            </p>
           </div>
         ) : (
           <div style={{ width:'100%', textAlign:'center' }}>
@@ -280,6 +296,35 @@ function StageTabs({ stage, setStage, visited }){
   );
 }
 
+/* The traps section. Twenty years of teaching says the fastest way to make a
+   junior professional is to show them exactly how the work goes wrong. */
+function CommonMistakes({ mistakes }){
+  return (
+    <div className="reveal" style={{ marginTop:26 }}>
+      <div className="eyebrow" style={{ marginBottom:14, color:'var(--crimson)' }}>How this goes wrong · avoid these</div>
+      <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+        {mistakes.map((m, i) => {
+          const parts = String(m).split(/:\s+(.+)/s);
+          const head = parts.length > 1 ? parts[0] : null;
+          const body = parts.length > 1 ? parts[1] : m;
+          return (
+            <div key={i} className="surface" style={{ padding:'16px 20px', display:'flex', gap:14, alignItems:'flex-start',
+              background:'rgba(209,30,76,.07)', borderColor:'rgba(209,30,76,.28)' }}>
+              <span style={{ width:24, height:24, borderRadius:'50%', flexShrink:0, marginTop:1,
+                border:'2px solid var(--crimson)', color:'var(--crimson)',
+                display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:900 }}>✗</span>
+              <span style={{ minWidth:0 }}>
+                {head && <span style={{ display:'block', fontWeight:800, fontSize:15, marginBottom:3 }}>{head}</span>}
+                <span className="c82" style={{ fontSize:14.5, fontWeight:500, lineHeight:1.55 }}>{body}</span>
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function WorkedExample({ worked }){
   const [revealed, setRevealed] = useState(false);
   return (
@@ -368,6 +413,7 @@ function StagedLesson({ course, lesson, practice, startExercise, backToCourse })
                 </div>
               ))}
             </div>
+            {lesson.mistakes && lesson.mistakes.length > 0 && <CommonMistakes mistakes={lesson.mistakes} />}
           </div>
         )}
 
@@ -492,6 +538,7 @@ function LessonView({ course, lesson, go, startExercise, backToCourse }){
               </div>
             ))}
           </div>
+          {lesson.mistakes && lesson.mistakes.length > 0 && <CommonMistakes mistakes={lesson.mistakes} />}
         </div>
 
         {/* today's Claude prompt */}

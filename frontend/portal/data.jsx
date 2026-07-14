@@ -530,6 +530,42 @@ const INTERN_COURSES = {
           'Where to look: real estate portals like Bayut and Dubizzle, PropTech and fintech publications, cross border investment guides, and regulatory or legal resources that reinforce the trust angle.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Chasing domain authority over relevance: a DA 80 news site that never covers property is worth less than a DA 35 Dubai travel blog whose readers book stays. Relevance converts, authority alone does not.',
+          'Counting directories as prospects: a site with four thousand outbound links and no editorial voice passes no trust. If nobody curates it, search engines discount it.',
+          'Prospecting without a contact angle: a list of urls is not a campaign. Every prospect needs a named person and a reason they would say yes, or it will sit in a spreadsheet forever.',
+        ],
+        worked: {
+          intro: 'Study how a senior SEO builds a prospect list before you build yours. The difference is that every row is ready to act on: a real site, a reason, a contact, and an honest value score.',
+          setup: 'Three rows from a real prospect list for the Dubai launch. Notice the third row: a high authority site scored LOW because it never links out editorially. A junior would have wasted a week on it.',
+          example: `BACKLINK PROSPECTS (three rows of twenty)
+
+{"site":"DubaiStayGuide.ae","category":"Travel blog","da_estimate":6,
+ "why":"Weekly Dubai holiday home content, audience actively books stays",
+ "links_to":"Neighbourhood guides and data pieces",
+ "contact":"Editor, Mariam K., accepts guest data pieces",
+ "angle":"Offer our occupancy by district data as an exclusive chart",
+ "value":9}
+
+{"site":"GccPropertyWire.com","category":"Property news","da_estimate":8,
+ "why":"Covers UAE rental regulation, high trust readership",
+ "links_to":"Original research and expert quotes",
+ "contact":"News desk, pitches via tips email",
+ "angle":"Quote from InstaSpace on DLD permit trends plus our fee data",
+ "value":8}
+
+{"site":"BigTravelPortal.com","category":"Global travel","da_estimate":9,
+ "why":"Huge reach but zero editorial outbound links in 12 months",
+ "links_to":"Nothing, affiliate content only",
+ "contact":"None findable",
+ "angle":"None viable",
+ "value":2}`,
+          notes: [
+            'The value score is not the DA score. Row three has the highest authority and the lowest value because there is no realistic path to a link.',
+            'Every angle names a specific asset we would offer, occupancy data, a regulation quote. "Ask them for a link" is not an angle.',
+            'The contact is a person or a route, not "info@". Outreach to a named editor with a relevant asset is the whole game.',
+          ],
+        },
         practice: {
           title: 'Identify Backlink Opportunities', mins: 45, difficulty: 'Beginner',
           brief: 'Use the prompt below in your live Claude session to generate 20 or more high quality backlink prospects across five categories, then organise them by priority for tomorrow.',
@@ -558,6 +594,32 @@ const INTERN_COURSES = {
           'The output is a gap list: publications that link to competitors but not yet to you, with the content angle most likely to win each one.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Copying the competitor instead of the gap: the point is not to get the same links they have, it is to find the publications that link to them and NOT to you, and the angle they missed.',
+          'Ignoring why the link exists: a competitor earned that link with a data report or a tool. Without knowing the earning asset, the gap list is a wish list.',
+          'Treating every gap as equal: a gap on a relevant, editorially active site is gold. A gap on a dead blog from 2019 is noise. Filter by freshness before you pitch.',
+        ],
+        worked: {
+          intro: 'A gap analysis is only useful if every gap comes with the reason the competitor earned the link and the angle you would use to win the same publication.',
+          setup: 'One gap entry from a real competitive analysis. Notice it names the earning asset (their fee comparison report) and proposes a sharper counter asset, not a me too pitch.',
+          example: `COMPETITIVE GAP LIST (one entry of ten)
+
+Publication: PropTechDaily.com (fintech and property, weekly links out)
+Links to: Competitor fee comparison report, linked in 3 articles this year
+Why it worked: original numbers journalists could quote without doing math
+The gap: they cover cross border payments but have never mentioned escrow
+  or trust verification, the half of the story our competitor cannot tell
+Our angle: pitch "the real cost of a cross border property deal", our fee
+  data PLUS the trust failures the fee focused report ignores
+First touch: comment with data on their latest cross border piece, then
+  pitch the editor within the week while the topic is warm
+Priority: Tier 1, pitch in week one`,
+          notes: [
+            'The angle extends the conversation the publication already cares about instead of repeating the competitor asset they already linked to.',
+            'The first touch is planned, warm the editor before the ask. Cold pitches to editors who have never seen your name convert in low single digits.',
+            'Priority is explicit. Ten gaps with tiers is a plan, forty gaps without tiers is homework nobody does.',
+          ],
+        },
         practice: {
           title: 'Analyse Competitor Backlinks', mins: 45, difficulty: 'Intermediate',
           brief: 'Run the prompt below to map competitor link profiles and surface the publications InstaSpace should be targeting but is not yet on.',
@@ -585,6 +647,36 @@ const INTERN_COURSES = {
           'InstaSpace angles that travel: investors losing 4 to 6 percent to fees, why verification matters more than price, escrow cutting closing time from six weeks to two, and an international investor survey.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Making content about yourself: nobody links to "why InstaSpace is great". They link to data, frameworks, and answers their readers need. Your brand rides along, it does not lead.',
+          'No quotable line: journalists link to what they can quote. If your asset has no single startling number or one line claim, it will be read and never cited.',
+          'Scoping a three month project: a linkable asset you can ship in two weeks beats a definitive guide that never ships. Effort estimates are part of the idea.',
+        ],
+        worked: {
+          intro: 'One fully specified content idea is worth more than ten vague ones. Study how a pro specifies a linkable asset down to the quotable line and the named targets.',
+          setup: 'The strongest idea from a real ideation session, specified to the point where a writer could start tomorrow. Notice the quotable line is written before the content exists.',
+          example: `LINKABLE ASSET SPEC (the chosen idea)
+
+Title: The Real Cost of Buying Property Across Borders in 2026
+Format: data report, 8 pages, one hero chart per section
+The quotable line: "International buyers lose 4 to 6 percent of every
+  cross border deal to fees and delays, an average of 38,000 dollars
+  on a Dubai apartment."
+Data sources: our settlement data, published bank FX margins, DLD fee
+  schedule, a 40 investor survey we can run in one week
+Who links to it, by name: GccPropertyWire (regulation angle),
+  PropTechDaily (fintech angle), expat finance blogs (the fee table),
+  investor newsletters (the survey findings)
+Why they link: original numbers nobody else has published, a chart
+  they can embed with attribution
+Effort: 2 weeks, one analyst plus one designer
+Ships: July 8, one week before launch, so coverage lands launch week`,
+          notes: [
+            'The quotable line is engineered first, the content is built to support it. That is backwards from how juniors work and it is why pros get cited.',
+            'Every target publication is matched to the specific section it would care about. One asset, four different pitches.',
+            'The ship date is tied to the launch so the links compound with the news moment instead of arriving after it.',
+          ],
+        },
         practice: {
           title: 'Brief a Linkable Content Asset', mins: 45, difficulty: 'Intermediate',
           brief: 'Use the prompt below to generate five backlink worthy content ideas, then pick the two you would build first for the July launch.',
@@ -612,6 +704,39 @@ const INTERN_COURSES = {
           'What fails: generic spam, demanding a link, vague with no value, and slow follow up.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Opening with your own name and company: the first line decides the open. Lead with THEIR article, THEIR audience, THEIR broken link. You come second.',
+          'Asking for "a link or share": vague asks get archived. Name the exact page, the exact anchor, and where it fits in their piece. Make yes a thirty second job.',
+          'Following up like a debt collector: one follow up at day 4 with new value (an updated stat, a chart) doubles replies. Three "just bumping this" emails burn the relationship.',
+        ],
+        worked: {
+          intro: 'Read a cold outreach email that actually earned a link, then hold your templates to its standard: personal in line one, valuable by line three, effortless to say yes to.',
+          setup: 'A real style cold pitch to a property publication. Count the sentences about the sender: one. Count the sentences about the recipient and their readers: four.',
+          example: `SUBJECT: A number for your DLD permits piece
+
+Hi Mariam,
+
+Your piece on the new DLD holiday home permits answered the question
+every host is asking right now, especially the part on renewal timing.
+
+One thing your readers might want next: what the paperwork actually
+costs them in lost nights. We measured it across 120 Dubai listings,
+hosts lose an average of 11 booked nights waiting on permits, about
+9,400 AED each.
+
+The full chart is here [link]. If it is useful for your follow up,
+you are welcome to embed it with attribution, no strings.
+
+Either way, the permits piece was the clearest I have read on this.
+
+Sanwa
+InstaSpace`,
+          notes: [
+            'The subject line promises value for THEIR work, not an introduction to ours. That is the difference between 8 percent and 30 percent opens.',
+            'The data point is specific enough to be irresistible, 11 nights, 9,400 AED, and it extends their article instead of pitching ours.',
+            '"No strings" plus a genuine compliment closes warm. Editors remember who made their job easier.',
+          ],
+        },
         practice: {
           title: 'Create Outreach Templates', mins: 45, difficulty: 'Intermediate',
           brief: 'Run the prompt below to produce three outreach templates, then customise the cold template into a real pitch to Bayut.',
@@ -639,6 +764,34 @@ const INTERN_COURSES = {
           'It defines success up front: backlinks per month, referring domain authority, referral traffic, and ranking movement.',
         ],
         videoLabel: 'Capstone walkthrough',
+        mistakes: [
+          'Planning outreach volume you cannot sustain: 50 pitches a week sounds impressive and collapses by week three. A pro plans 10 quality pitches a week and hits 12 weeks straight.',
+          'No kill criteria: a roadmap that never drops a dead target wastes months. Every tier needs an exit rule, for example two ignored pitches and one follow up means move on.',
+          'Reporting activity instead of outcomes: "40 emails sent" is not a result. Links earned, referring domain quality, and ranking movement are the numbers leadership reads.',
+        ],
+        worked: {
+          intro: 'A roadmap earns its name when any week can be executed without asking you a question. Study one week from a real roadmap and the tracking row that proves the work.',
+          setup: 'Week three of a 90 day roadmap plus one row of the tracking sheet. Notice the week has owners, exact counts, and a decision rule, and the tracking row records the outcome, not the effort.',
+          example: `WEEK 3 (of 12) · Content ships, Tier 1 outreach opens
+
+Mon  Publish "Real Cost of Cross Border Deals" report      Owner: Sanwa
+Tue  Pitch 4 Tier 1 targets with personalised angles       Owner: Mesum
+Wed  Broken link sweep on 6 Tier 2 property guides         Owner: Mesum
+Thu  Follow up week 2 pitches (day 4 rule, add new stat)   Owner: Mesum
+Fri  Log outcomes, move 2 ignored targets to Tier 3        Owner: Sanwa
+
+Decision rule: any target ignoring pitch plus one follow up drops a tier.
+Week target: 2 links earned or in editorial review.
+
+TRACKING SHEET (one row)
+| Date | Target           | Asset pitched     | Outcome         | DA | Link |
+| 7/18 | GccPropertyWire  | Fee data report   | LIVE, dofollow  | 8  | /research/cross-border-costs |`,
+          notes: [
+            'Every day names one owner and one countable action. "Do outreach" is not a plan, "pitch 4 Tier 1 targets" is.',
+            'The decision rule prevents the roadmap from silting up with dead targets, the most common way link campaigns die.',
+            'The tracking row records the earned url and follow status, which is what makes month three reporting take ten minutes instead of a day.',
+          ],
+        },
         practice: {
           title: 'Ship the 90 Day Backlink Roadmap', mins: 60, difficulty: 'Advanced', capstone: true,
           brief: 'This is your capstone. Use the prompt below to turn everything from this week into a production ready roadmap Hamza can hand to stakeholders.',
@@ -678,6 +831,36 @@ const INTERN_COURSES = {
           'Claude’s role in design: analysing brand guidelines, writing briefs, generating on brand copy, suggesting layouts and creative direction, and drafting video scripts.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Briefing the mood instead of the message: "premium and trustworthy" describes every luxury brand on earth. A brief that does not name the single message produces a pretty post that says nothing.',
+          'Skipping the dimensions and platform: a concept that works at 1080x1350 dies in a 1080x1920 story. Format is part of the idea, not an export setting.',
+          'Leaving copy to the designer: "add some text about trust" guarantees a rewrite. The brief carries the final words, the designer gives them form.',
+        ],
+        worked: {
+          intro: 'A design brief is finished when the designer never has to come back with a question. Study one launch day brief written to that bar.',
+          setup: 'Day 3 of the launch week series, the solution post. Every choice is spelled out: the exact copy, the exact hex, the exact weights, and what NOT to do.',
+          example: `DESIGN BRIEF · LAUNCH DAY 3 OF 5 · "THE SOLUTION"
+
+Message (one line): Escrow plus borderless settlement, a deal that
+  used to take six weeks now closes in two.
+Visual concept: a split timeline. Left side, six week bar in muted
+  cream at 40 percent opacity labelled "the old way". Right side,
+  two week bar in the brand gradient, bold, labelled "InstaSpace".
+Copy on image: headline "Six weeks becomes two." set in Urbanist
+  ExtraBold 64pt cream. Sub line "Escrow and settlement, built in."
+  Urbanist SemiBold 28pt at 70 percent opacity.
+Colours: ground #120822, bars #F5EFE8 and the #F2622E to #D11E4C
+  gradient. No other colours.
+Dimensions: 1080x1350 feed. Safe margins 96px all sides.
+Caption: 40 words max, ends with "Early access opens July 15."
+Do not: use a photo, use more than two type sizes, add the logo
+  larger than 120px, it sits bottom right at 80 percent opacity.`,
+          notes: [
+            'The visual concept is described so precisely a designer who has never seen InstaSpace could build it, yet it leaves the craft, spacing, motion of the bars, to them.',
+            'The copy is final, written words, not a theme. Approving words before design kills the most expensive revision loop.',
+            'The do not list encodes brand rules where they are most often broken. A brief without one produces on average two extra review rounds.',
+          ],
+        },
         practice: {
           title: 'Create a Comprehensive Design Brief', mins: 45, difficulty: 'Beginner',
           brief: 'Use the prompt below to get design briefs for five Instagram posts for launch week, each detailed enough to build straight in Canva.',
@@ -705,6 +888,40 @@ const INTERN_COURSES = {
           'The Claude and Canva workflow: Claude drafts copy and layout, you build, Claude reviews a description of your design and suggests tweaks, and you iterate.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Writing the caption after the visual: the words carry the message, the visual earns the stop. Approve copy first or you will redesign twice.',
+          'Burying the hook: on Instagram only the first line shows before "more". If line one does not stop the scroll, lines two through ten do not exist.',
+          'Hashtag soup: thirty generic tags read as spam to both the algorithm and the investor. Eight to ten specific tags outperform, and none of them is #realestate alone.',
+        ],
+        worked: {
+          intro: 'Study a before and after on one launch caption. The rewrite is not more clever, it is more concrete, and that is the whole craft.',
+          setup: 'The same day one announcement, first as a junior drafted it, then as it shipped. Read both aloud and notice where your attention dies in the first version.',
+          example: `BEFORE (junior draft)
+"We are SO excited to announce that InstaSpace is finally launching in
+Dubai!! Our revolutionary platform makes cross border real estate
+seamless and stress free. Stay tuned for more!!
+#realestate #dubai #startup #excited #launch #proptech #innovation"
+
+AFTER (as shipped)
+"A Dubai apartment. A buyer in Singapore. Settled in two weeks, not six.
+
+InstaSpace opens in Dubai on July 15. Escrow, verification, and
+borderless settlement at 1.5 percent, built in from day one.
+
+Early access for the first 100 investors. Link in bio.
+#DubaiRealEstate #CrossBorderInvesting #UAEProperty #PropTechMENA
+#DubaiInvestors #EscrowProtected #MaldivesNext #InstaSpace"
+
+WHY EVERY EDIT HAPPENED
+Line 1: a concrete scene replaced excitement nobody shares
+Numbers replaced adjectives: two weeks, 1.5 percent, 100 investors
+The ask sharpened: "stay tuned" became a countable action`,
+          notes: [
+            'The after version contains zero exclamation marks and zero hype words, yet reads more confident. Specificity is what confidence looks like in writing.',
+            'Every number survived from the message house, nothing was invented for the caption. Copy that invents numbers gets the brand in trouble.',
+            'The first line works as a standalone story in six words. That is the test: cover everything below line one and ask if you would tap more.',
+          ],
+        },
         practice: {
           title: 'Write and Refine Launch Post Copy', mins: 45, difficulty: 'Intermediate',
           brief: 'Use the prompt below to write two Instagram posts, build them in Canva, then bring a description back to Claude for feedback.',
@@ -732,6 +949,38 @@ const INTERN_COURSES = {
           'Storyboarding: a scene by scene breakdown with the footage or graphics needed, on screen text timing, and voiceover matched to visuals.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Spending the hook on a logo: the first three seconds decide completion rate, and a logo animation answers a question nobody asked. Open on the viewer problem, brand at the end.',
+          'Writing radio, not video: a script where the voiceover says exactly what the screen shows wastes one of the two channels. Voice carries the argument, visuals carry the proof.',
+          'No scene durations: a storyboard without seconds per scene always produces a 90 second video for a 60 second slot, and the cut kills the best scene.',
+        ],
+        worked: {
+          intro: 'Study the first two scenes of a shipped explainer script. Notice how the hook is a problem the viewer already feels, and how voice and visuals never repeat each other.',
+          setup: 'The opening 20 seconds of the Dubai launch explainer, in the exact format an animator was handed. Total script is 148 words for 60 seconds, roughly 2.5 words per second.',
+          example: `SCENE 1 · 0:00 to 0:05 · THE HOOK
+Visual: a wire transfer progress bar crawling, stamps piling onto
+  documents, a calendar flipping through six weeks, fast cuts
+Voiceover: "Buying property in another country still takes six weeks
+  and costs more than most people ever find out."
+On screen text: "6 weeks. 6.4 percent."
+Animation: calendar pages flip harder as the bar crawls
+Audio: a low clock tick under muted strings
+
+SCENE 2 · 0:05 to 0:18 · THE PROBLEM MADE PERSONAL
+Visual: a split screen, a buyer in Singapore at night, a Dubai
+  apartment in daylight, a dotted line between them snapping at
+  the middle where a bank icon sits
+Voiceover: "Between you and the keys sit intermediaries, fees, and
+  paperwork that was designed before the internet."
+On screen text: none, let the visual breathe
+Animation: the dotted line snaps twice, rebuilds slower each time
+Audio: tick continues, one beat of silence at the snap`,
+          notes: [
+            'The hook states the viewer problem in numbers within five seconds and never mentions the brand. Completion rate is bought in scene one.',
+            'The voiceover and visuals carry different halves: voice gives the argument, screen gives the evidence. Where the visual is strong, the text stays silent.',
+            'Every scene has exact timestamps, so the 60 second budget is spent on paper before a single frame is animated.',
+          ],
+        },
         practice: {
           title: 'Write a 60 Second Script and Storyboard', mins: 45, difficulty: 'Intermediate',
           brief: 'Use the prompt below to produce a full 60 second explainer script and a scene by scene storyboard, then mock the scenes up in Canva.',
@@ -759,6 +1008,37 @@ const INTERN_COURSES = {
           'Explaining motion to developers: keyframes, transitions, duration, and the trigger that starts each animation.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Describing motion with adjectives: "smooth and snappy" means four different things to four developers. Milliseconds, easing curves, and triggers are the only shared language.',
+          'One off timings everywhere: 180ms here, 240ms there, 310ms somewhere else reads as sloppy in the final cut. A motion system reuses three or four durations everywhere.',
+          'Forgetting the trigger: an animation without a defined start event either autoplays wrong or never plays. Every element needs "starts when" in the spec.',
+        ],
+        worked: {
+          intro: 'A motion spec is done when a developer can build the exact animation without watching a reference video. Study one element specified to that standard.',
+          setup: 'The fee number from scene one of the explainer, specified as a developer receives it. Notice the shared duration tokens, this project uses only 200ms, 300ms, and 600ms everywhere.',
+          example: `ANIMATION SPEC · SCENE 1 · ELEMENT "FEE COUNTER"
+
+Element: the "6.4 percent" figure, Urbanist ExtraBold 96px, #F2622E
+Trigger: 400ms after scene 1 visual settles (t = 0:01.2)
+Sequence:
+  1. Count up 0.0 to 6.4 over 600ms, ease out cubic
+     (fast start, decelerating, the number lands with weight)
+  2. On land: scale 1.0 to 1.06 to 1.0 over 200ms, ease in out
+  3. Colour hold #F5EFE8 during count, snaps to #F2622E on land
+End state: 6.4 percent at scale 1.0, #F2622E, remains until scene cut
+Do not: loop, bounce more than once, or animate the percent sign
+  separately from the digits
+
+MOTION SYSTEM TOKENS (whole project)
+fast   200ms  ease in out    micro feedback, scale taps
+base   300ms  ease out       reveals, fades, slides
+count  600ms  ease out cubic number counts only`,
+          notes: [
+            'Three duration tokens cover the whole video. Consistency of timing is what makes motion feel designed instead of decorated.',
+            'The spec includes the end state and the do nots, the two things developers otherwise have to guess and usually guess differently.',
+            'The trigger is expressed relative to the scene, not the video start, so scenes can be re cut without re specifying every element.',
+          ],
+        },
         practice: {
           title: 'Write an Animation Specification', mins: 45, difficulty: 'Intermediate',
           brief: 'Use the prompt below to turn the explainer scenes into a detailed animation spec a developer can build from exactly.',
@@ -786,6 +1066,38 @@ const INTERN_COURSES = {
           'A design system reference: colours, Urbanist usage, logo rules, spacing, and clear do’s and don’ts.',
         ],
         videoLabel: 'Capstone walkthrough',
+        mistakes: [
+          'Shipping a folder, not a kit: fifty files with no index is homework for the receiver. The kit opens with one page that says what exists, where it lives, and who posts what when.',
+          'Assets without their captions: a graphic separated from its approved caption gets posted with improvised words, and the voice breaks on day two.',
+          'No adaptation notes: the Maldives launch will reuse this kit. Without "what to change and what to never change" notes, someone will change the wrong half.',
+        ],
+        worked: {
+          intro: 'The test of a launch kit is whether marketing can run day one without messaging you. Study the kit index and one calendar entry from a kit that passed that test.',
+          setup: 'The first page of the kit plus the day 1 row of the calendar. Every asset is named, every caption travels with its graphic, and posting is an execution task, not a judgement call.',
+          example: `VISUAL LAUNCH KIT · INDEX (page 1)
+
+01 Message house one pager          /kit/01-message.pdf
+02 Social calendar July 15 to 21    /kit/02-calendar.pdf
+03 Feed graphics x5 with captions   /kit/03-feed/
+04 Story graphics x5                /kit/04-stories/
+05 Video: script, board, specs      /kit/05-video/
+06 Design system quick reference    /kit/06-design-ref.pdf
+07 Maldives adaptation notes        /kit/07-maldives.pdf
+
+CALENDAR · DAY 1 · TUESDAY JULY 15
+Post: 03-feed/day1-announcement.png (1080x1350)
+Time: 5:00 PM GST (peak for Dubai investors, tested)
+Caption: final text in 03-feed/day1-caption.txt, do not edit
+Story: 04-stories/day1.png at 5:30 PM, link sticker to early access
+Owner: Ayesha posts, Shahzaib on standby for comments with the
+  approved FAQ answers in 01-message
+Metric: profile visits and early access signups, log at 9 PM`,
+          notes: [
+            'The index is the kit. Anyone can find any asset in ten seconds, which is the difference between a kit and a zip file.',
+            'Captions ship as locked files next to their graphics. "Do not edit" protects the voice from well meaning improvisation at posting time.',
+            'Each day has an owner, a time backed by a reason, and a metric with a check time. Execution needs zero decisions.',
+          ],
+        },
         practice: {
           title: 'Ship the Visual Launch Kit', mins: 60, difficulty: 'Advanced', capstone: true,
           brief: 'This is your capstone. Use the prompt below to consolidate the week into a launch kit marketing can execute end to end.',
@@ -825,6 +1137,43 @@ const INTERN_COURSES = {
           'The test case format: an ID, a title, preconditions, numbered steps, the expected result, the actual result, and a status of pass, fail, or blocked.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Testing only the happy path: "user logs in with correct password" is one test. The other nine are wrong password, empty fields, pasted whitespace, expired session, and the back button after logout.',
+          'Steps a stranger cannot follow: "test the chat" is not a step. "Type hello, press Enter, wait 10 seconds" is. If a new hire cannot run your case, it is a note, not a test.',
+          'No expected result written down: without "expected: error message names the wrong field" you cannot fail the test, and a test that cannot fail is theatre.',
+        ],
+        worked: {
+          intro: 'Study two test cases from a professional plan, one happy path, one edge, and notice they share the same discipline: exact steps, one expected result, no ambiguity.',
+          setup: 'Two cases from the portal login area of a real plan. The second one is the kind juniors never write and seniors always write, because it is where products actually break.',
+          example: `TEST CASES (two of thirty)
+
+ID: LOGIN-01 · Valid sign in
+Precondition: seeded account exists, user signed out, on /
+Steps:
+  1. Enter the account email in the Email field
+  2. Enter the correct password
+  3. Press Enter
+Expected: dashboard loads within 3 seconds, the sidebar shows the
+  user name and track, no console errors
+Priority: P0
+
+ID: LOGIN-07 · Session expiry mid exercise (edge)
+Precondition: signed in, exercise chat open, session token deleted
+  from the database to simulate expiry
+Steps:
+  1. Type a message in the exercise chat
+  2. Press Send
+Expected: a clear re authentication message appears, the typed
+  message is NOT lost, and after signing back in the user returns
+  to the same exercise
+Priority: P1
+Note: silent failure here loses learner work, worst case for trust`,
+          notes: [
+            'LOGIN-07 tests what happens at the seam between two features, session and chat. Seams are where the real bugs live.',
+            'The expected result for the edge case includes what must NOT happen, the typed message is not lost. Negative expectations catch silent failures.',
+            'Priorities are on the case, not in your head, so when time runs short the P0s still run.',
+          ],
+        },
         practice: {
           title: 'Create a QA Test Plan', mins: 45, difficulty: 'Beginner',
           brief: 'Use the prompt below to generate a comprehensive test plan for the portal, then pick the ten highest priority tests to run first.',
@@ -852,6 +1201,40 @@ const INTERN_COURSES = {
           'Coverage across surfaces: desktop Chrome, Firefox, and Safari, mobile iOS and Android, and a range of screen sizes.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Reporting the symptom without the reproduction: "chat is broken sometimes" cannot be fixed. If you cannot reproduce it, report exactly what you observed, when, and what you tried, labelled as intermittent.',
+          'Severity by annoyance: a typo that made YOU wince is minor, a payment failure you happened to shrug off is critical. Severity follows user impact, not your mood.',
+          'Bundling three bugs in one report: each gets one ticket or two of them never get fixed. One report, one bug, one reproduction.',
+        ],
+        worked: {
+          intro: 'An engineer should be able to fix your bug without ever talking to you. Study a report that meets that bar.',
+          setup: 'A real style bug report for a progress persistence failure. Notice the environment block, the numbered reproduction, and the severity justified by impact, not emotion.',
+          example: `BUG REPORT · PORTAL-BUG-014
+
+Title: Exercise completion lost after page refresh on Safari iOS
+Severity: HIGH. Learners lose passed work, which breaks trust in
+  the whole portal. Not CRITICAL because work recovers on re grade.
+Environment: Safari 17, iPhone 12, iOS 17.5, portal on localhost:8000,
+  API healthy at time of test
+Steps to reproduce:
+  1. Sign in as a seeded intern account
+  2. Open lesson 1, complete the exercise, pass the grade
+  3. See the success overlay, progress shows 20 percent
+  4. Pull to refresh the page
+Expected: progress still 20 percent, lesson 1 marked done
+Actual: progress shows 0 percent, lesson 1 back to active. The
+  same flow on Chrome desktop persists correctly.
+Frequency: 3 of 3 attempts on Safari iOS, 0 of 3 on Chrome
+Evidence: screen recording attached, console shows a blocked
+  localStorage write in private browsing mode
+Suspected area: auth token storage falls back silently when
+  localStorage is unavailable`,
+          notes: [
+            'The severity line argues its own rating in one sentence. Triage meetings go twice as fast when every report does this.',
+            'Frequency with counts, 3 of 3 versus 0 of 3, turns "it happens sometimes" into a browser specific lead an engineer can chase.',
+            'The suspected area is offered humbly and saves an hour of hunting. You are allowed to be wrong, you are not allowed to be vague.',
+          ],
+        },
         practice: {
           title: 'Execute Tests and Report Bugs', mins: 45, difficulty: 'Intermediate',
           brief: 'Run ten to fifteen of your tests against the portal, then use the prompt below to turn your findings into formal bug reports.',
@@ -879,6 +1262,41 @@ const INTERN_COURSES = {
           'The workflow shape: a trigger, then a condition, then an action, for example submission with score under seven triggers a helpful hints email.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Automating judgement instead of handoff: an automation that decides who "deserves" help will be wrong in ways nobody notices. Automate the notification, keep the judgement human.',
+          'No failure path: what happens when the email service is down or the record has no address? An automation without an error branch fails silently for months.',
+          'Skipping the test record: every automation gets tested with a fake record BEFORE it touches real students, or your first test is a real person getting a wrong email.',
+        ],
+        worked: {
+          intro: 'A production automation is a contract: this trigger, this condition, this action, this failure behaviour. Study one written out to that standard.',
+          setup: 'The low score helper automation as documented for handover. Notice the failure branch and the test log, the two sections juniors leave out.',
+          example: `AUTOMATION SPEC · LOW SCORE HELPER
+
+Trigger: new record in Exercise Submissions (Airtable)
+Condition: Score is less than 7 AND Hints Sent is unchecked
+Action:
+  1. Look up the exercise in Helpful Hints by ExerciseID
+  2. Send email via Zapier Gmail step:
+     To: student email · Subject: "A nudge on {ExerciseName}"
+     Body: warm opening, the two matched hints, one resource link,
+     "reply to this email and a mentor will jump in"
+  3. Check the Hints Sent box (prevents double sending)
+Failure branch:
+  If no hints match the ExerciseID: do NOT email the student,
+  post to the mentors channel instead: "No hints exist for
+  {ExerciseID}, {Student} scored {Score}, follow up manually."
+  If the email step errors: retry once after 10 minutes, then flag.
+Test log (before go live):
+  7/12 test record score 5, matched hints, email received, box checked
+  7/12 test record score 9, correctly ignored
+  7/12 test record score 4 with fake exercise id, mentor alert fired,
+       student received nothing`,
+          notes: [
+            'The Hints Sent checkbox is the idempotency guard. Without it, every edit to the record fires another email, the classic no code disaster.',
+            'The failure branch protects the student first: no matching hints means a human follows up, never a broken template email.',
+            'The test log has three cases: fires, correctly does not fire, and fails safely. All three, every time, before real data.',
+          ],
+        },
         practice: {
           title: 'Build a No-Code Automation', mins: 45, difficulty: 'Intermediate',
           brief: 'Use the prompt below to get a step by step no-code workflow, then build and test it in a demo environment.',
@@ -906,6 +1324,38 @@ const INTERN_COURSES = {
           'Content SEO: use target keywords naturally, write for humans first, and place keywords in headings and the first paragraph.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Writing titles for robots: "Claude AI Learning Platform | Course | Learn Claude AI" is keyword stuffing that no human clicks. The title is a promise to a person that also contains the keyword.',
+          'Auditing without the current state: a recommendation with no "before" cannot be verified as an improvement. Every finding records what is there now, then what it should be.',
+          'Ranking every fix as urgent: an audit where everything is priority one is an audit with no priorities. Quick wins ship this week, structural fixes get a milestone.',
+        ],
+        worked: {
+          intro: 'An audit finding is only useful when it shows the before, the after, and the reason. Study two findings written that way.',
+          setup: 'Two rows from a real on page audit of a learning portal. Notice each names the current state, the exact replacement text, and why the change earns clicks or rankings.',
+          example: `SEO AUDIT FINDINGS (two of eighteen)
+
+FINDING 03 · Homepage title tag
+Current: "InstaSpace Learning Portal"
+Problem: no keyword a searcher would type, wastes the most powerful
+  30 characters on the site
+Recommended: "Learn Claude AI for Real Work | InstaSpace Academy"
+  (51 chars: keyword first, brand last, a benefit in the middle)
+Effort: 5 minutes · Impact: high · Priority: quick win, this week
+
+FINDING 07 · Lesson pages share one H1
+Current: every lesson renders the course title as the H1, so ten
+  pages compete for the same phrase
+Problem: search cannot tell lessons apart, so none of them rank
+Recommended: H1 becomes the lesson title, "Reading Search Intent",
+  course title moves to a breadcrumb above it
+Effort: one template change · Impact: unlocks ten pages ranking
+  for ten different queries · Priority: this sprint`,
+          notes: [
+            'Both findings quote the exact replacement text. An audit that says "improve the title" outsources the actual work back to the developer.',
+            'Effort and impact ride on every finding, which is what lets someone else sequence the work without re reading the whole audit.',
+            'Finding 07 is structural, one fix unlocks ten pages. Spotting the template level fix instead of ten page level fixes is what experience looks like.',
+          ],
+        },
         practice: {
           title: 'Run an SEO Audit of the Portal', mins: 45, difficulty: 'Intermediate',
           brief: 'Use the prompt below to audit the portal pages, then check the real pages and list the fixes to make.',
@@ -933,6 +1383,40 @@ const INTERN_COURSES = {
           'An SEO improvements list split into quick wins, medium effort, and long term.',
         ],
         videoLabel: 'Capstone walkthrough',
+        mistakes: [
+          'Burying the verdict: leadership opens your report asking one question, can we launch. If the answer is not in the first three lines, the report failed regardless of its quality.',
+          'Hiding behind data: forty pages of test results with no recommendation is an abdication. You ran the tests, you make the call, the data defends it.',
+          'A bug log without owners and dates: "should be fixed" is a wish. "Junaid, before July 15" is a plan. Reports that assign nothing change nothing.',
+        ],
+        worked: {
+          intro: 'The opening of a testing report decides whether the rest gets read. Study a verdict first opening and one row of a bug log with teeth.',
+          setup: 'The first lines of a real style launch readiness report plus one bug log row. The verdict comes first, the evidence follows, and every issue has an owner and a date.',
+          example: `PORTAL TESTING AND OPTIMISATION REPORT
+
+VERDICT: Conditional GO. The portal can launch on July 15 if the
+two critical issues below are fixed and re tested by July 12.
+Everything else can follow launch without user visible risk.
+
+BY THE NUMBERS
+Tests executed: 42 of 45 planned (3 blocked on a test account issue)
+Pass rate: 86 percent · Critical: 2 · High: 3 · Medium: 6 · Low: 4
+
+THE TWO THAT BLOCK LAUNCH
+1. Progress lost on Safari iOS refresh (BUG-014). One in three of
+   our interns uses an iPhone. Owner: Junaid. Fix by: July 11.
+2. Chat send button dead after an API timeout (BUG-009). The retry
+   never re enables, learners think the portal is down.
+   Owner: Junaid. Fix by: July 12.
+
+BUG LOG (one row of fifteen)
+| ID  | Title                     | Sev  | Owner  | Fix by | Status |
+| 014 | Progress lost on refresh  | CRIT | Junaid | 7/11   | Open   |`,
+          notes: [
+            'The verdict is conditional and specific, launch IF these two by these dates. That is more useful than either a yes or a no.',
+            'The two blockers are argued in user terms, one in three interns on iPhone, learners think the portal is down. Impact language gets fixes prioritised.',
+            'Three tests were blocked and the report says so. Hiding the gap between planned and executed is how QA loses credibility.',
+          ],
+        },
         practice: {
           title: 'Ship the Testing and Optimization Report', mins: 60, difficulty: 'Advanced', capstone: true,
           brief: 'This is your capstone. Use the prompt below to consolidate the week into a stakeholder ready report for Junaid and Hamza.',
@@ -972,6 +1456,38 @@ const INTERN_COURSES = {
           'The test case format: ID, title, preconditions, numbered steps, expected result, actual result, and status.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Planning by feature list instead of by risk: the features most likely to break are the ones touching money, auth, and third party APIs. A plan that gives login and a static footer equal attention is not a plan.',
+          'Tests that depend on each other: if test 12 only works when test 11 passed, one failure cascades into noise. Every case sets up its own preconditions.',
+          'Forgetting the failure states: the portal talks to a live AI API. What the user sees when that API is down is a feature, and it needs its own tests.',
+        ],
+        worked: {
+          intro: 'A risk ranked plan spends its first hour where the product is most likely to embarrass you. Study how a pro allocates forty five test cases.',
+          setup: 'The allocation table from the front of a real test plan. Notice that surface area does not equal test count, risk does, and the reasoning is written down.',
+          example: `TEST PLAN · RISK ALLOCATION (45 cases)
+
+| Area              | Cases | Why this many                        |
+| Auth and session  | 10    | Breaks silently, blocks everything   |
+| Live Claude chat  | 9     | Third party API, timeout and error   |
+|                   |       | paths are the real product           |
+| Submission and    | 9     | Data loss here destroys learner      |
+| progress          |       | trust permanently                    |
+| Navigation        | 6     | High traffic, low complexity         |
+| Mobile layout     | 6     | One third of interns are on phones   |
+| Error handling    | 5     | API down, network drop, bad input    |
+
+FIRST TEN TO RUN (P0 sweep, in order)
+1. LOGIN-01 valid sign in          6. CHAT-03 API timeout message
+2. LOGIN-02 wrong password         7. SUB-01 passing grade persists
+3. LOGIN-07 session expiry         8. SUB-04 progress after refresh
+4. CHAT-01 send and receive        9. NAV-01 course to lesson to chat
+5. CHAT-02 empty message blocked  10. MOB-01 exercise chat on iPhone`,
+          notes: [
+            'The why column forces honesty about risk. If you cannot say why an area gets nine cases, you are testing by habit, not by thinking.',
+            'The first ten are ordered so that a failure early, sign in broken, stops the run before wasting an hour on tests that cannot pass.',
+            'Chat error paths get as much attention as chat happy paths. With third party APIs, the error path IS the product half the time.',
+          ],
+        },
         practice: {
           title: 'Create a QA Test Plan', mins: 45, difficulty: 'Beginner',
           brief: 'Use the prompt below to generate a comprehensive test plan, then choose the ten highest priority tests to run first.',
@@ -999,6 +1515,38 @@ const INTERN_COURSES = {
           'Coverage: desktop and mobile browsers and a range of screen sizes.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Deviating from the steps and not saying so: you clicked somewhere extra, the bug appeared, and your report describes steps that do not reproduce it. Record what you actually did, keystroke by keystroke.',
+          'Testing only your own account state: a fresh account, a mid course account, and a completed account hit different code paths. One state is one third of the coverage.',
+          'Softening the finding to be polite: "might be a small issue maybe" wastes everyone who reads it. State what happened plainly, kindness lives in precision, not hedging.',
+        ],
+        worked: {
+          intro: 'Severity is the judgement call that separates professional QA from clicking around. Study the ladder a pro uses and one report where the rating was argued, not felt.',
+          setup: 'The severity ladder from a real QA handbook, then the severity paragraph from one report. The rating is derived from user impact using the ladder, so any teammate would reach the same one.',
+          example: `THE SEVERITY LADDER
+
+CRITICAL  Blocks a core flow with no workaround, or loses user
+          data, or leaks anything private. Ship stops.
+HIGH      Core flow broken but a workaround exists, or a visible
+          failure that erodes trust (wrong numbers, lost state).
+MEDIUM    A feature misbehaves in edge conditions, or UX confusing
+          enough to generate support questions.
+LOW       Cosmetic, copy, spacing, and anything a user would not
+          notice unless told.
+
+APPLYING IT (from report BUG-021)
+"Severity: HIGH, not CRITICAL. The exercise chat send button stays
+disabled after an API timeout, which kills the session for that
+learner. A workaround exists, refreshing the page restores the
+button, but no learner would discover it unaided. It is not
+CRITICAL because no data is lost and re grade recovers everything.
+If the refresh workaround did not exist, this would be CRITICAL."`,
+          notes: [
+            'The ladder is written in terms of user impact and workarounds, never in terms of how hard the fix is. Fix effort is engineering business, severity is user business.',
+            'The report argues both directions, why HIGH and why not CRITICAL. Ratings argued both ways almost never bounce in triage.',
+            'The invisible workaround is called out. A workaround nobody can find barely counts as one, and the report says so honestly.',
+          ],
+        },
         practice: {
           title: 'Execute Tests and Report Bugs', mins: 45, difficulty: 'Intermediate',
           brief: 'Run your tests against the portal, then use the prompt below to write up any failures as formal bug reports.',
@@ -1026,6 +1574,39 @@ const INTERN_COURSES = {
           'A suite is reusable: it is written once and run every release, so regressions are caught early.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'A suite that only you can run: if the preconditions live in your head, the suite retires the day you do. Every case must be runnable by someone who joined yesterday.',
+          'Keeping dead tests: a case for a feature that was removed, or one that has passed 50 releases straight without ever mattering, is drag. Prune on every release.',
+          'No smoke subset: when a hotfix ships in an hour you cannot run 45 cases. A marked 10 minute smoke subset is the difference between tested and hoped.',
+        ],
+        worked: {
+          intro: 'A reusable suite is a product with an interface: a summary anyone can read, groups anyone can navigate, and a smoke subset anyone can run in ten minutes.',
+          setup: 'The header block of a real regression suite plus how one feature group is organised. Notice the suite tells you its own state before you run a single test.',
+          example: `REGRESSION SUITE · INSTASPACE PORTAL · v6
+
+LAST FULL RUN: July 12 against commit 79626e8
+RESULT: 41 pass · 2 fail · 2 blocked · pass rate 91 percent
+GATE: launch candidates need 95 percent and zero critical fails
+SMOKE SUBSET: the 8 cases marked [S], runtime about 10 minutes
+
+OPEN FAILS
+BUG-014 progress on Safari refresh (HIGH, owner Junaid)
+BUG-021 chat send after timeout (HIGH, owner Junaid)
+
+GROUP: AUTH AND SESSION (10 cases)
+[S] LOGIN-01 valid sign in                       last: PASS
+[S] LOGIN-02 wrong password shows generic error  last: PASS
+    LOGIN-03 empty fields blocked                last: PASS
+    LOGIN-07 session expiry mid exercise         last: PASS
+    ...
+Retired this version: LOGIN-05 (remember me box removed in v5,
+  test deleted, noted here for one version then gone)`,
+          notes: [
+            'The header answers the three questions any teammate asks: when did this last run, what failed, and what is the bar. Nobody has to scroll to learn the state.',
+            'The [S] smoke marks turn one suite into two: the full regression and the ten minute hotfix check. One artefact, two speeds.',
+            'Retired tests are logged for one version before deletion, so nobody hunts for a case that intentionally disappeared.',
+          ],
+        },
         practice: {
           title: 'Assemble the Reusable Test Suite', mins: 45, difficulty: 'Intermediate',
           brief: 'Use the prompt below to turn your test cases and results into an organised, reusable suite with a summary.',
@@ -1053,6 +1634,39 @@ const INTERN_COURSES = {
           'The audit produces a prioritised fix list, quick technical wins first.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Auditing what tools can see instead of what matters: a perfect Lighthouse score on a page nobody searches for is a vanity metric. Start from the queries, then audit the pages that should answer them.',
+          'Recommending schema before crawlability: structured data on pages the crawler cannot reach or render is decoration. Fix rendering and internal links first, schema second.',
+          'A single page app blind spot: content rendered only by JavaScript may be invisible to crawlers. For a Babel in browser portal, this is finding number one, not a footnote.',
+        ],
+        worked: {
+          intro: 'Technical audits earn trust by finding the one structural issue that explains ten symptoms. Study how a pro writes up exactly that kind of finding.',
+          setup: 'The lead finding from a technical audit of this very kind of portal, a client rendered single page app. One root cause, its symptoms, and a staged fix.',
+          example: `TECHNICAL AUDIT · LEAD FINDING
+
+FINDING 01 · The portal is invisible to crawlers (root cause)
+Evidence: fetching any page with JavaScript disabled returns an
+  empty <div id="root"> and three script tags. The crawler sees
+  no headings, no text, no links.
+Symptoms this one issue explains:
+  - zero indexed pages beyond the homepage
+  - no lesson page appears for any content query
+  - social shares show no preview text
+Staged fix, cheapest first:
+  1. This week: add static <title>, meta description, and open
+     graph tags per route to index.html templates
+  2. This sprint: pre render the public marketing pages to plain
+     HTML, keep the app behind login as is
+  3. This quarter: evaluate server rendering only if public
+     content pages become a growth channel
+What NOT to do: do not server render the authenticated portal,
+  it is behind login and crawlers will never see it anyway.`,
+          notes: [
+            'One root cause is traced to three visible symptoms. Reports that treat each symptom separately produce three tickets that fix nothing.',
+            'The fix is staged by cost with a calendar word on each stage. "Pre render everything" would be correct and would never ship.',
+            'The what not to do line saves the team from the expensive over correction, which is half the value of an expert audit.',
+          ],
+        },
         practice: {
           title: 'Run a Technical SEO Audit', mins: 45, difficulty: 'Intermediate',
           brief: 'Use the prompt below to audit the portal technically and map keywords to pages.',
@@ -1080,6 +1694,41 @@ const INTERN_COURSES = {
           'It defines measurement: rankings, traffic, and leads, with tools and a monthly reporting rhythm.',
         ],
         videoLabel: 'Capstone walkthrough',
+        mistakes: [
+          'Strategy without sequencing: listing technical fixes, content, and links as three parallel streams ignores that they compound in order. Crawlability first, content second, links to content that exists.',
+          'Keyword targets you cannot win in 90 days: a new portal will not outrank established players for "AI learning platform" by October. Pick winnable long tail queries first and say so.',
+          'No monthly checkpoint that can change the plan: a 90 day strategy reviewed only at day 90 is a 90 day guess. Each month ends with a decision, continue, adjust, or kill.',
+        ],
+        worked: {
+          intro: 'A strategy document is a sequence of bets with checkpoints. Study month one of a real 90 day plan and the checkpoint that ends it.',
+          setup: 'Month one from a 90 day SEO strategy for the portal. Notice everything ships in dependency order and the month ends with a measurable gate, not a vibe check.',
+          example: `90 DAY SEO STRATEGY · MONTH 1 · FOUNDATIONS
+
+Bet: the portal cannot rank for anything until crawlers can read
+it, so month one buys visibility, not rankings.
+
+Week 1  Static meta and open graph tags on all public routes
+Week 1  XML sitemap and robots.txt shipped
+Week 2  Pre render the 4 public pages (home, tracks, about, verify)
+Week 2  Search Console verified, baseline recorded: 1 page indexed
+Week 3  Keyword map, 20 long tail queries we can win, for example
+        "learn claude ai for seo work" not "ai learning platform"
+Week 4  First two content pieces drafted against that map
+
+MONTH 1 CHECKPOINT (day 30)
+Gate: 4 or more public pages indexed, zero crawl errors
+If met: month 2 proceeds, content and internal linking
+If not met: STOP. Month 2 becomes diagnosis, publishing content
+  onto an unindexable site is burning the budget.
+
+Measurement rhythm: indexed pages weekly, impressions weekly,
+one ranked query by day 60, first organic signup by day 90.`,
+          notes: [
+            'The bet is stated in one sentence, so anyone reading month one knows what it is buying and why rankings are not promised yet.',
+            'The keyword example shows the discipline: a query the portal can actually win this quarter, with the vanity query explicitly rejected.',
+            'The checkpoint has a stop condition. Strategies that can only ever say continue are reports, not strategies.',
+          ],
+        },
         practice: {
           title: 'Ship the 90 Day SEO Strategy', mins: 60, difficulty: 'Advanced', capstone: true,
           brief: 'This is your capstone. Use the prompt below to produce a 90 day SEO strategy with a content calendar and measurement plan.',
@@ -1119,6 +1768,11 @@ const INTERN_COURSES = {
           'The trust surfaces (KYC/InstaPass, GovShield, disputes, AI-Auditor) are what separates InstaSpace from a plain listings site. Learn to spot them.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Touring as a user instead of a mapper: clicking around for an hour feels productive and produces nothing. The map is built one row at a time WHILE you tour, or it never gets built.',
+          'Describing surfaces by their looks: "the page with the cards" will mean nothing in a week. Name surfaces by their job, search results, checkout, payout list.',
+          'Skipping the admin side: the surfaces guests never see, KYC queues, dispute mediation, are where the trust product actually lives. A map without them is half a map.',
+        ],
         worked: {
           intro: 'Before you map the app yourself, study how a senior product person does it. The difference is never effort, it is structure: one row per surface, one job per row, and an improvement note specific enough to file as a ticket.',
           setup: 'A senior PM toured the guest side for twenty minutes and produced the rows below. Notice that every row names a real surface, a single job, the trust module involved, and a could be better note that an engineer could act on tomorrow.',
@@ -1164,6 +1818,11 @@ const INTERN_COURSES = {
           'A dispute is a booking that ended sideways. The resolution centre must produce a real wallet refund, not just a status change.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Testing money with one account: payouts, refunds, and wallet balances involve two parties. Testing only the guest side means the host side failures, the expensive ones, go unseen.',
+          'Assuming the happy path completed: "I paid and it said confirmed" is not the end of the flow. Did escrow show HELD, did the payout land, did the coins credit. Follow the money to its final resting place.',
+          'Writing severities without a rule: money bugs are never minor. If a dirham can be lost, duplicated, or orphaned, the floor is major, and blocker if there is no workaround.',
+        ],
         worked: {
           intro: 'A money flow test sheet lives or dies on the observed result column. Anyone can write what should happen. A tester writes down what actually happened, and scores the gap.',
           setup: 'A QA engineer walked one booking end to end and logged every step as JSON. Study the third row: the expected and observed results differ, so it carries a severity and a one line fix idea. That row is the whole craft.',
@@ -1218,6 +1877,11 @@ const INTERN_COURSES = {
           'Auth uses scrypt hashed passwords and bearer tokens in SQLite. First login forces a password change. Interns land on a specialty track, leadership lands on the overview.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Documenting what the code says instead of what it means: listing every file is an index, not an architecture note. The note explains the three decisions that shape everything else.',
+          'Writing for yourself: you know what a bearer token is today. The intern joining next month may not. Every term either explains itself or earns a one line explanation.',
+          'No reading order: "here are the important files" without a sequence sends the newcomer to the hardest file first. Rank the reading list and say why each file is on it.',
+        ],
         worked: {
           intro: 'An architecture note is judged by one test: can a new intern read it in ten minutes and not ask you anything obvious afterwards. Study the excerpt below, then hold your own note to the same bar.',
           setup: 'This is the opening of a real one page architecture note for this portal, written for someone joining next month. Notice it explains in plain sentences, names exact files, and never assumes the reader knows the stack.',
@@ -1275,6 +1939,11 @@ Three files to read first:
           'A test without an expected result is a note, not a test, and a test without an observed result has not run yet.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'One giant suite with no actor column: when a case fails, the first question is always whose experience broke. A suite that cannot answer that by sorting one column slows every triage.',
+          'Priorities by gut: money and trust cases are P1 by rule, not by feel. A written priority rule is what keeps two testers from rating the same case P1 and P3.',
+          'Testing the systems only when they work: the portal grading an honest fail, the webapp rejecting a double booking, systems saying NO correctly is half the suite.',
+        ],
         worked: {
           intro: 'A test case is a contract: given this setup, when I do these steps, exactly this must happen. Study the three cases below, one happy path, one edge, one that crosses products, then write yours to the same shape.',
           setup: 'Three cases from a real cross product suite. Notice the precondition (the world before the test), numbered steps a stranger could follow, one unambiguous expected result, and honest priority. The money touching case is P1 by rule, not by mood.',
@@ -1331,6 +2000,11 @@ Three files to read first:
           'A thirty day fix plan groups fixes into week one (blockers), week two (majors), weeks three and four (polish and prevention).',
         ],
         videoLabel: 'Capstone walkthrough',
+        mistakes: [
+          'Reporting everything you did: the week produced four artefacts, the report is not their sum. Leadership needs the three risks, the ranked list, and the plan, everything else is appendix.',
+          'Bugs without victims: "gallery loads slowly" ranks below "a host cannot tell which stay paid them" even if the gallery bug is technically harder. Rank by who bleeds, not by engineering interest.',
+          'A plan without a week one: thirty day plans that start "eventually" never start. Week one has names, dates, and the two fixes that matter most.',
+        ],
         worked: {
           intro: 'Leadership reads the first six lines of a report and decides whether to read the rest. Study how this executive summary earns the next page, then hold your capstone to it.',
           setup: 'The opening of a product report the CEO actually acted on. Three risks, each in plain English, each with the evidence and the cost of ignoring it. No table yet, no jargon, no throat clearing.',
@@ -1411,6 +2085,38 @@ const DEPT_COURSES = {
           'The signals that matter: portfolio size, prior cross border experience, regulatory or legal background, and liquid capital. In the Dubai launch the fast converters averaged an 85M portfolio and 75 percent had a legal or accounting background.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Scoring on wealth alone: a 500M portfolio with zero cross border experience converts slower than an 80M portfolio with three international deals. Behaviour beats balance sheet.',
+          'Treating both markets as one: a rubric tuned for Dubai speed misreads every Maldives lead, where the cycle is longer and verification is the hook. One rubric per market.',
+          'Scores without reasons: a 9 with no reason string cannot be defended in standup and cannot be improved next month. The reason is the product, the number is the summary.',
+        ],
+        worked: {
+          intro: 'Study one scored lead from a professional scoring run before you build your own rubric. The score is almost the least interesting part of the row.',
+          setup: 'One investor from a real scoring output. Notice the two separate dimensions, the reason citing specific profile signals, and the action that turns a score into tomorrow morning work.',
+          example: `SCORED LEAD (one of fifty)
+
+{"name":"R. Patel","portfolio_m":450,"source":"partner referral",
+ "background":"legal","cross_border_deals":3,
+
+ "fintech_readiness":9,
+ "readiness_reason":"Large portfolio with 70 percent held offshore,
+   legal background means escrow terms will not scare him, and he
+   has settled cross border before, the exact user Phase 2 exists for",
+
+ "time_to_conversion":8,
+ "conversion_reason":"Partner referral plus prior UAE deals is the
+   fastest converting combination in the launch cohort, expect two
+   to three weeks",
+
+ "next_action":"Send the escrow walkthrough today and offer a 20
+   minute settlement demo this week, do NOT start with the lifestyle
+   deck, he buys certainty, not views"}`,
+          notes: [
+            'Two dimensions, not one blended number. A lead can be a 9 on readiness and a 3 on speed, and the outreach differs completely for each combination.',
+            'Every reason cites profile fields by name. When the ranking looks wrong, you can see exactly which signal misled the score and fix the rubric.',
+            'The next action includes a do not. Knowing which pitch would lose this lead is worth as much as knowing which one wins him.',
+          ],
+        },
         practice: {
           title: 'Build a Lead Scoring Prompt', mins: 45, difficulty: 'Beginner',
           brief: 'Fifty investors signed up in the first week of the Dubai launch. Use the prompt below to score which are highest intent for the Phase 2 fintech rollout.',
@@ -1438,6 +2144,42 @@ const DEPT_COURSES = {
           'The iteration loop: write a basic prompt, check the ranking against your knowledge, add examples, and refine until Claude ranks like an expert. On the Phase 2 launch this loop reached about 87 percent accuracy.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Adding examples that all look alike: three high examples with big portfolios teach the model one thing three times. The teaching power is in the contrasts, especially the deceptive middle cases.',
+          'Refining without a fixed test set: if you change the prompt AND the leads every round, you cannot tell whether the prompt improved. Freeze twenty leads as your benchmark and score the prompt against them.',
+          'Chasing 100 percent agreement: if the model agrees with you completely, it has learned your biases too. The disagreements you cannot explain are the ones worth investigating, sometimes the model is right.',
+        ],
+        worked: {
+          intro: 'Prompt refinement is an experiment, not a vibe. Study one round from a real refinement log: hypothesis, change, measured result.',
+          setup: 'Round two of three from a scoring prompt iteration log. The team froze twenty hand ranked leads as ground truth, so every prompt version gets a hard number.',
+          example: `REFINEMENT LOG · ROUND 2 OF 3
+
+Benchmark: 20 leads hand ranked by the growth lead, frozen
+Round 1 result: 12 of 20 in the right band (60 percent)
+
+Diagnosis of the 8 misses:
+  6 were organic signups with mid portfolios that the prompt
+  scored 7 to 8, humans scored 4 to 5. The prompt is treating
+  portfolio size as the dominant signal.
+
+Hypothesis: adding one deceptive middle example, big portfolio
+  but weak behavioural signals, will teach the separation.
+
+Change (added to prompt):
+  "Example of a MEDIUM score that looks HIGH: Omar S., portfolio
+   210M, but organic signup, no cross border history, no legal or
+   accounting background. Score 5. A large domestic portfolio
+   without cross border behaviour is a browser, not a buyer."
+
+Round 2 result: 17 of 20 in the right band (85 percent)
+Remaining misses: 3 edge cases, logged for round 3.
+Decision: ship this version, round 3 after the Maldives cohort.`,
+          notes: [
+            'The benchmark is frozen before refinement starts. Without it, "the ranking looks better now" is an opinion wearing a lab coat.',
+            'The added example is deceptive on purpose, it looks high and scores medium. Deceptive cases teach separations, obvious cases teach nothing.',
+            'The log ships at 85 percent with known misses instead of chasing perfect. A shipped 85 beats an unshipped 95, and the next cohort provides round 3 for free.',
+          ],
+        },
         practice: {
           title: 'Refine the Scoring Prompt', mins: 45, difficulty: 'Intermediate',
           brief: 'Take your lesson 1 prompt and sharpen it. Add worked examples and refine across a few rounds until the ranking matches your domain knowledge.',
@@ -1465,6 +2207,49 @@ const DEPT_COURSES = {
           'Match the message to the segment: high signal investors get an escrow walkthrough and a case study, medium signal get education and a product overview, low signal get a longer nurture.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Personalising the name and nothing else: "Hi Rajesh" followed by the same email everyone gets is worse than no personalisation, it advertises the automation. Personalise the problem, not the greeting.',
+          'Five asks in five emails: each email that asks for a meeting resets the trust clock. The first three emails give, the fourth asks, the fifth closes with urgency. That is the give ask ratio.',
+          'Fake urgency: "spots filling fast" for a product with no capacity limit poisons the whole sequence when the investor finds out. Real deadlines only, or no deadline.',
+        ],
+        worked: {
+          intro: 'Study the first email of a sequence written for one specific segment, then notice how everything, the hook, the proof, the ask, derives from that segment definition.',
+          setup: 'Email 1 of 5 for the segment "high readiness legal background investors from partner referrals". Compare every line against the segment and watch nothing generic survive.',
+          example: `SEGMENT: High readiness, legal or accounting background,
+  partner referred, Dubai launch cohort
+PAIN POINT: they have done cross border deals and remember
+  exactly where the six weeks went
+
+EMAIL 1 OF 5 · DAY 0
+
+Subject: The six weeks you lost on your last cross border deal
+
+Rajesh,
+
+You have closed deals across borders before, which means you know
+where the time actually goes. Not the decision, the settlement:
+correspondent banks, compliance queues, and paperwork that repeats
+itself in two jurisdictions.
+
+We built InstaSpace to remove exactly that layer. Escrow and
+settlement run inside the platform, verified end to end, and a
+deal that took six weeks closes in two. The fee is 1.5 percent,
+against the 6.4 percent average you have likely paid.
+
+Amir at Meridian Capital suggested you would want to see the
+escrow flow itself rather than a deck. Here is a three minute
+walkthrough: [link]
+
+No reply needed. Email 2 on Thursday shows the numbers from our
+first forty Dubai settlements.
+
+Layla Al Marri · InstaSpace`,
+          notes: [
+            'The subject assumes expertise instead of explaining basics, which is itself a compliment to this segment. The same subject would confuse a first time buyer.',
+            'The referral is used by name in the body, not the subject. Name dropping in subjects reads as spam, in the body it reads as context.',
+            '"No reply needed" plus a preview of email 2 removes all pressure while guaranteeing the open. Sequences that telegraph their next step train the reader to keep reading.',
+          ],
+        },
         practice: {
           title: 'Write a Personalized Outreach Sequence', mins: 45, difficulty: 'Intermediate',
           brief: 'Pick one segment from your scored list and use the prompt below to write a five email sequence tuned to their pain point.',
@@ -1492,6 +2277,39 @@ const DEPT_COURSES = {
           'Learn from the misses: the Phase 2 score overweighted portfolio size and missed engagement velocity and deal stage. Adding engagement signals lifted accuracy on the next cohort.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Measuring opens instead of outcomes: open rate proves the subject line worked, nothing more. The score is judged on conversion accuracy, the sequence on demos booked and deals closed.',
+          'Sample sizes too small to mean anything: eight sends per segment cannot separate a good sequence from a lucky one. Below thirty sends, report direction, never percentages.',
+          'Iterating everything at once: changing the score AND the sequence AND the timing in one cycle means the improvement, if any, cannot be attributed. One change per cycle per asset.',
+        ],
+        worked: {
+          intro: 'A measurement plan earns its keep when a number comes back wrong. Study how a pro pre commits to what wrong means and what happens next.',
+          setup: 'The metrics table and one failure mode card from a real four week plan. Every metric has a target, a floor, and an owner, and the failure mode was written BEFORE the campaign ran.',
+          example: `MEASUREMENT PLAN · METRICS TABLE
+
+| Metric                  | Target | Floor | Owner  | Read on |
+| Score accuracy (top 15) | 75%    | 55%   | Layla  | Day 14  |
+| Open rate (high seg)    | 40%    | 25%   | Mesum  | Day 7   |
+| Reply rate (high seg)   | 12%    | 5%    | Mesum  | Day 14  |
+| Demos booked            | 6      | 2     | Layla  | Day 21  |
+Floor rule: any metric under its floor at read time triggers the
+matching failure mode card, no waiting for the cycle to end.
+
+FAILURE MODE CARD F2 (pre written)
+Signal: high segment opens fine but replies under 5 percent
+Likely cause: the pitch is right, the ask is wrong, demo feels
+  too heavy for a first conversation
+Check: re read replies received, are any asking lighter questions
+Fix: swap email 4 ask from "20 minute demo" to "3 minute recorded
+  walkthrough", rerun on the next 20 leads only
+Not the fix: rewriting the whole sequence, the opens prove the
+  hook works, do not burn what is working`,
+          notes: [
+            'Targets come with floors. A target is what success looks like, a floor is where you stop and intervene, and the two jobs are different.',
+            'The failure mode card was written before launch, when heads were cold. Diagnosis written during a miss inherits the panic of the miss.',
+            'The fix is scoped to the next 20 leads, not the whole list. Small reversible fixes are how you iterate without gambling the cohort.',
+          ],
+        },
         practice: {
           title: 'Design a Measurement and Iteration Plan', mins: 45, difficulty: 'Intermediate',
           brief: 'Use the prompt below to turn your score and sequences into a measurable four week plan with targets and predicted failure modes.',
@@ -1519,6 +2337,48 @@ const DEPT_COURSES = {
           'It carries an honest accuracy estimate and a feedback loop, so the team can improve it as a versioned asset.',
         ],
         videoLabel: 'Capstone walkthrough',
+        mistakes: [
+          'Documenting the how without the when not: an asset used in the wrong situation produces confident garbage. The "do not use this for" section prevents more damage than the instructions section.',
+          'Shipping without a worked sample: instructions plus a real input and its real output is what makes an asset runnable by a stranger. Instructions alone get abandoned on first ambiguity.',
+          'Claiming accuracy you have not measured: "highly accurate" is marketing, "85 percent on a 20 lead benchmark, tested July 2026" is engineering. The team will trust the asset exactly as much as its honesty deserves.',
+        ],
+        worked: {
+          intro: 'A reusable asset is judged by a stranger test: can someone who never met you run it correctly and know when not to trust it. Study the front page of one that passes.',
+          setup: 'The header sections of a real growth asset doc. Notice the honest accuracy line and the when not to use list, the two sections that separate an asset from a pasted prompt.',
+          example: `GROWTH ASSET · GA-003 · INVESTOR LEAD SCORER · v2
+
+PURPOSE (one sentence)
+Ranks a raw signup list by fintech readiness and time to
+conversion so the team calls the right fifteen people first.
+
+WHEN TO USE
+New cohort of 20 plus signups with portfolio, source, and
+background fields populated. Dubai and Maldives rubrics included.
+
+WHEN NOT TO USE
+- Lists without a source field, referral signal drives 30 percent
+  of the score, without it every score inflates
+- Institutional buyers, the rubric is built for individuals
+- Any market we have not launched, the conversion bands are
+  measured, not universal
+
+MEASURED ACCURACY
+85 percent band agreement on a 20 lead benchmark (July 2026,
+Dubai cohort). Maldives rubric unvalidated until the first
+50 signups, treat its output as a draft ranking.
+
+TO RUN IT
+1. Export signups as CSV with the five required columns
+2. Paste into the prompt template below at [INVESTOR DATA]
+3. Sanity check: the top 3 should not surprise you, if they do,
+   check the source column populated correctly
+Sample input and output: appendix A (real, anonymised)`,
+          notes: [
+            'The when not to use list is specific enough to actually stop someone, naming the missing field and why it breaks the score.',
+            'Accuracy is a number with a date and a benchmark, and the unvalidated Maldives rubric is flagged as a draft. Honesty is what makes the 85 percent believable.',
+            'Step 3 builds in a sanity check. Assets that teach their users to distrust surprising output survive their own errors.',
+          ],
+        },
         practice: {
           title: 'Ship a Reusable Growth Asset', mins: 60, difficulty: 'Advanced', capstone: true,
           brief: 'This is your capstone. Use the prompt below to consolidate your scoring, sequences, and measurement into one documented asset for the Growth toolbox.',
@@ -1558,6 +2418,43 @@ const DEPT_COURSES = {
           'Match the message to the audience: a Dubai investor cares about capital certainty, a Maldives buyer about verification and lifestyle. Same house, different door.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'A core message that is a category, not a claim: "trust infrastructure for real estate" describes what shelf we sit on. The core message says what changes for the customer, in numbers if possible.',
+          'Pillars that are adjectives: trustworthy, fast, affordable is a horoscope, it fits anyone. Pillars are claims with proof attached or they are decoration.',
+          'Building the house and never using it: a message house that does not get quoted in every brief within a month was a workshop, not an asset. Every campaign asset should trace to a pillar.',
+        ],
+        worked: {
+          intro: 'A message house works when a stranger can write on brand copy from it alone. Study one built to that bar and check every part carries proof.',
+          setup: 'The InstaSpace message house as a senior strategist would build it. Notice the core message is a claim you could falsify, and every pillar carries numbers, not adjectives.',
+          example: `MESSAGE HOUSE · INSTASPACE
+
+CORE MESSAGE
+A cross border property deal, settled in two weeks at 1.5 percent,
+with every party verified. That is the whole promise.
+
+PILLAR 1 · TRUST          PILLAR 2 · COST        PILLAR 3 · SPEED
+AI native verification    1.5 percent all in     Two weeks to keys
+of people, property,      versus the 6.4         versus the six
+and right to rent         percent global         week average
+                          average
+Proof:                    Proof:                 Proof:
+- InstaPass ID checks     - fee schedule public  - digital escrow,
+- GovShield permits       - no correspondent       no bank queue
+- escrow on every deal      bank chain           - 40 settlements
+                                                   averaged 13 days
+
+AUDIENCE DOORS (same house, different entrance)
+Dubai investor: lead with COST and SPEED, trust is the reassurance
+Maldives buyer: lead with TRUST, the stricter regime makes
+  verification the purchase reason, speed is the bonus
+
+BANNED: revolutionary, seamless, game changer, unlock, empower`,
+          notes: [
+            'The core message contains three verifiable facts, two weeks, 1.5 percent, verified. If legal cannot sign off every word, the message is not done.',
+            'Each pillar proof names a product surface, InstaPass, GovShield, escrow. Proof that points at real features survives a skeptical reader.',
+            'The audience doors reorder the same pillars instead of inventing new messages. One house, many doors is what keeps ten campaigns coherent.',
+          ],
+        },
         practice: {
           title: 'Build the InstaSpace Message House', mins: 45, difficulty: 'Beginner',
           brief: 'Use the prompt below to turn the InstaSpace promise into a message house you can hand to every campaign.',
@@ -1585,6 +2482,43 @@ const DEPT_COURSES = {
           'Proof beats adjectives. Replace revolutionary and seamless with 1.5 percent and two weeks.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Writing the headline last: teams polish body copy for hours under a headline nobody chose deliberately. Eighty percent of visitors read only the headline, spend the effort in proportion.',
+          'Two calls to action: "book a demo or join the waitlist" splits intent and both numbers drop. One section, one ask, and the page can have different asks per section.',
+          'Proof points that need proof: "trusted by leading investors" is a claim pretending to be evidence. A number, a name, or a mechanism, anything else is filler.',
+        ],
+        worked: {
+          intro: 'Study a hero section rewrite with the reasoning attached to every line, then apply the same surgery to the section in your exercise.',
+          setup: 'The before is real junior work: every feature named, nothing felt. The after leads with the outcome and lets three numbers do the persuading.',
+          example: `BEFORE
+"InstaSpace is a revolutionary platform with escrow, borderless
+settlement, verification, and a seamless dashboard for global
+real estate."
+
+AFTER
+Headline: Keys in two weeks, not six.
+Subhead:  InstaSpace settles cross border property deals with
+          escrow and verification built in, at 1.5 percent
+          instead of the 6.4 percent you pay today.
+Proof row:
+  13 days    average settlement, last 40 Dubai deals
+  1.5%       all in, published fee schedule
+  100%       of parties verified, InstaPass and GovShield
+CTA: See a real settlement, 3 minutes  →
+
+THE SURGERY, LINE BY LINE
+"revolutionary" deleted: claims about us, replaced by claims
+  about the buyer outcome
+Four features became one outcome: the features moved to the
+  proof row where they justify instead of pitch
+CTA sells the next 3 minutes, not the product: low commitment
+  asks outconvert "get started" for high consideration purchases`,
+          notes: [
+            'The headline is the outcome in six words with a number. It would survive being read alone, which is exactly how most visitors read it.',
+            'The proof row is where the features went to work. Features as proof convert, features as pitch scroll past.',
+            'The call to action prices the click honestly, three minutes. For a product bought with this much deliberation, selling the demo beats selling the signup.',
+          ],
+        },
         practice: {
           title: 'Rewrite a Launch Page Section', mins: 45, difficulty: 'Intermediate',
           brief: 'Use the prompt below to rebuild a flat, feature stuffed hero section into launch copy that leads with the outcome.',
@@ -1612,6 +2546,49 @@ const DEPT_COURSES = {
           'Sequence the trust: lead with verification and settlement proof before you ask for a demo.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Subject lines that summarise instead of open a loop: "Our launch announcement" tells the whole story, so nobody opens it. "The fee nobody itemises" demands the click to close the loop.',
+          'Educating forever and never asking: five emails of pure value with no ask is a newsletter, not a launch sequence. Email four asks, plainly, and the earlier emails earn it the right to.',
+          'Ignoring the reply channel: launch emails that come from noreply@ tell the reader their questions are unwelcome. A real sender name with a monitored inbox converts questions into demos.',
+        ],
+        worked: {
+          intro: 'A sequence is an argument delivered in instalments. Study the skeleton of a five email launch sequence, subject, job, and ask for each, before writing full drafts.',
+          setup: 'The sequence plan a senior marketer writes BEFORE any email is drafted. Each email has one job and hands off to the next, and only one of the five asks for the meeting.',
+          example: `LAUNCH SEQUENCE SKELETON · DUBAI WAITLIST
+
+E1 · Day 0 · ANNOUNCE
+Subject: Dubai is live. Here is what that means for your money.
+Job: confirm the launch, restate the core promise in two lines
+Ask: none. One link to the fee schedule for the curious.
+
+E2 · Day 3 · THE PROBLEM PRICED
+Subject: The 6.4 percent nobody itemises
+Job: make the current cost concrete, a 38,000 dollar example on
+  a 2M AED apartment, sourced
+Ask: none. "Thursday: how escrow removes each line."
+
+E3 · Day 6 · THE MECHANISM
+Subject: Where your money actually sits during a deal
+Job: walk escrow and settlement step by step, this is the trust
+  email, InstaPass and GovShield by name
+Ask: soft. Three minute recorded walkthrough.
+
+E4 · Day 10 · PROOF THEN ASK
+Subject: 40 settlements, 13 day average. See one.
+Job: the case study, real numbers from the first cohort
+Ask: THE ask. A 20 minute demo, two time slots offered.
+
+E5 · Day 14 · CLOSE THE WINDOW
+Subject: Early access closes Friday
+Job: real deadline, restate the one number that matters per
+  pillar, answer the top objection in one line
+Ask: last call demo link. After Friday, the waitlist.`,
+          notes: [
+            'Each email promises the next one. Sequences with visible structure train opens, the reader knows the Thursday email completes the fee story.',
+            'The ask escalates: nothing, nothing, three minutes recorded, twenty minutes live, deadline. Each yes is slightly bigger than the last, which is how strangers become bookings.',
+            'The deadline in E5 is real, early access genuinely closes. One honest deadline outperforms four manufactured ones, forever.',
+          ],
+        },
         practice: {
           title: 'Build a Launch Email Sequence', mins: 45, difficulty: 'Intermediate',
           brief: 'Use the prompt below to write a five email launch sequence for investors on the Dubai waitlist.',
@@ -1639,6 +2616,42 @@ const DEPT_COURSES = {
           'Tie every post to one call to action and one metric, so you know what worked.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Fourteen posts that are all announcements: by day three the audience has heard the news. The calendar rotates jobs, teach, prove, ask, entertain, and announcement is one job, used twice.',
+          'Same post, both platforms: LinkedIn rewards an argument, Instagram rewards a moment. Cross posting the identical asset to both is half a calendar wearing two hats.',
+          'No slot for reacting: launches generate questions, press, and unexpected moments. A calendar with every slot pre filled cannot capitalise on the best content of launch week, the live stuff.',
+        ],
+        worked: {
+          intro: 'Study three days of a professional launch calendar, enough to see the rhythm: pillars rotate, formats vary, and every post knows its metric.',
+          setup: 'Days 2 through 4 of a fourteen day calendar. Notice no format repeats on consecutive days, each platform gets native treatment, and day 4 is deliberately held open.',
+          example: `LAUNCH CALENDAR · DAYS 2 TO 4 OF 14
+
+DAY 2 · Pillar: COST · Format: stat card
+IG: single image, "6.4 percent" crossed out, "1.5 percent" in
+  the gradient. Caption 38 words ending "fee schedule in bio".
+LI: the same claim as a 120 word post, the math on a 2M AED
+  apartment, no image, let the number be the visual.
+Metric: IG saves (cost content gets saved), LI comments
+
+DAY 3 · Pillar: TRUST · Format: 30 second explainer
+IG Reel: screen recording of the GovShield badge on a real
+  listing, voiceover explains right to rent in plain words.
+LI: native video, same footage, opening line "Most listings
+  cannot prove the host is allowed to rent them."
+Metric: completion rate, profile visits
+
+DAY 4 · HELD OPEN · react slot
+Planned fallback if nothing happens: founder note on why we
+  publish our fee schedule (pillar COST, format text).
+If press or big questions land: respond same day with a post,
+  the fallback moves to day 9.
+Metric: whatever the moment demands`,
+          notes: [
+            'Each platform gets a native version of the same pillar, not a copy. The LinkedIn cost post is an argument, the Instagram one is a visual moment.',
+            'Metrics are chosen per format, saves for reference content, completion for video. One metric for everything measures nothing.',
+            'The held open day is planned spontaneity. The fallback means it never posts nothing, the open slot means launch week can answer back.',
+          ],
+        },
         practice: {
           title: 'Generate a Launch Content Calendar', mins: 45, difficulty: 'Intermediate',
           brief: 'Use the prompt below to produce a two week launch content calendar mapped to the message house.',
@@ -1666,6 +2679,48 @@ const DEPT_COURSES = {
           'It defines success: the metric and target for each channel so the team knows if it worked.',
         ],
         videoLabel: 'Capstone walkthrough',
+        mistakes: [
+          'A kit without a decision maker: launch week produces judgement calls, a negative comment thread, a press question. The kit names who decides what in an hour, or every call escalates to the founder.',
+          'Metrics without a baseline: "track signups" means nothing without the pre launch number next to it. Every metric in the kit records its day zero value.',
+          'The Maldives guide as an afterthought: "change Dubai to Maldives" is not adaptation. The second market guide names what changes (the lead pillar, the regulation, the examples) and what never changes (the voice, the numbers discipline).',
+        ],
+        worked: {
+          intro: 'The run guide is the page that makes a kit executable by people who did not build it. Study one written for a real launch week.',
+          setup: 'The one page how to run it from a campaign kit. Note the daily rhythm, the decision rules for the predictable surprises, and the honest escalation line.',
+          example: `HOW TO RUN LAUNCH WEEK (one page)
+
+DAILY RHYTHM
+09:00  Post per calendar (owner: Ayesha)
+09:15  Yesterday metrics into the tracker, next to baselines
+13:00  Reply pass: every comment and DM answered inside 4 hours
+       using the approved FAQ, escalate anything about fees or
+       regulation, do not improvise those
+17:00  Evening post where scheduled, story reshares of mentions
+
+DECISION RULES (pre agreed, do not re litigate mid week)
+Negative thread with facts wrong: correct once, politely, with
+  the fee schedule link, then disengage. Never twice.
+Press inquiry: acknowledge inside the hour, route to Talha,
+  no substantive answers in DMs.
+A post underperforms by half against baseline: do not delete,
+  do not repost, log it and let the calendar continue. One post
+  never decides a launch.
+Anything legal or a customer complaint: straight to Osman.
+
+SUCCESS THIS WEEK MEANS
+Waitlist grows 30 percent (baseline 412 on July 14)
+Two press or newsletter mentions
+Demo slots 60 percent booked by Friday
+
+If none of the three is trending by Wednesday noon, we meet for
+15 minutes and swap emails 4 and 5 forward. That is the only
+mid week change we allow.`,
+          notes: [
+            'The decision rules cover the three predictable dramas of every launch, criticism, press, and a flopped post, so nobody makes those calls at 9 PM in a panic.',
+            'Success is three numbers with baselines and a date, and the mid week correction is limited to one pre agreed move. Kits that allow unlimited mid week changes produce launches with no signal.',
+            'The fee and regulation FAQ topics are marked never improvise. Knowing which questions are load bearing is what protects a trust brand.',
+          ],
+        },
         practice: {
           title: 'Ship the Launch Campaign Kit', mins: 60, difficulty: 'Advanced', capstone: true,
           brief: 'This is your capstone. Use the prompt below to consolidate the week into a launch campaign kit the marketing team can execute.',
@@ -1705,6 +2760,49 @@ const DEPT_COURSES = {
           'Write the compliance summary a host or investor can read in one minute, so the rulebook becomes a selling point, not a barrier.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Treating AI research as legal clearance: Claude maps the terrain fast, but a licensing question is closed by local counsel, not by a confident paragraph. The map tells counsel what to check, it does not replace them.',
+          'Mapping only the launch permits: the settlement rules, money movement, escrow custody, foreign ownership limits, are the rules that can kill the business model, not just delay the launch.',
+          'One long memo instead of a decision document: leadership needs to see what is known, what is assumed, and what is blocking, in three separate lists. Mixing them hides the risk.',
+        ],
+        worked: {
+          intro: 'A regulatory map is a sorting exercise: known, assumed, blocking. Study how a pro keeps the three ruthlessly separate.',
+          setup: 'The summary page of a Maldives regulatory map. Every line is tagged with its confidence and its source, and the one minute compliance summary is written for an investor, not a lawyer.',
+          example: `REGULATORY MAP · MALDIVES ENTRY · SUMMARY
+
+KNOWN (sourced, high confidence)
+- Foreign buyers face restrictions on freehold, leasehold
+  structures up to 99 years are the standard route [source:
+  government land act, verified against two law firm guides]
+- Tourism sector property runs under a separate regime from
+  residential [source: ministry publications]
+
+ASSUMED (probable, needs counsel sign off)
+- Our escrow structure likely requires a local licensed partner
+  rather than a direct licence [pattern from comparable markets,
+  UNVERIFIED for Maldives]
+- AML expectations follow FATF standards [typical, unverified]
+
+BLOCKING (no launch date until closed)
+B1: which authority licenses a payments plus property platform,
+    two candidate regulators, counsel question 1
+B2: can settlement funds be held offshore or must they sit in a
+    local bank, changes our whole treasury design, counsel
+    question 2
+
+ONE MINUTE COMPLIANCE SUMMARY (investor facing, draft)
+"Buying in the Maldives as a foreigner means a leasehold, and it
+means trusting the structure that holds your money. InstaSpace
+enters only after local licensing is confirmed, your funds sit
+in regulated escrow, and every property's lease status is
+verified before it lists. We publish the licence details on
+every listing."`,
+          notes: [
+            'Assumed is its own category with the reasoning shown. The fastest way to lose leadership trust is an assumption dressed as a fact.',
+            'The blocking list is short, named, and numbered, and each item maps to a specific counsel question. That is what makes the legal engagement cheap and fast.',
+            'The investor summary admits the constraint, leasehold, and turns compliance into the selling point. In trust markets, honesty about rules is marketing.',
+          ],
+        },
         practice: {
           title: 'Map a New Market’s Regulation', mins: 45, difficulty: 'Intermediate',
           brief: 'Use the prompt below to map the regulatory surface of the Maldives entry and turn it into a one minute compliance summary.',
@@ -1732,6 +2830,44 @@ const DEPT_COURSES = {
           'Protect trust at the seams: never send paid demand to an empty market, and never onboard hosts you cannot yet settle.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Sequencing to the calendar instead of to conditions: "week 5: start paid demand" is wrong the moment supply slips. The trigger is the listing floor, the week number is just the forecast.',
+          'Counting signed hosts as supply: a host who signed but has not passed verification is not bookable inventory. The floor counts verified, listable units, nothing else.',
+          'One sided trust math: every week of the sequence has a host trust risk AND a guest trust risk. Plans that only track one side get blindsided by the other.',
+        ],
+        worked: {
+          intro: 'A launch sequence is a chain of gates, not a list of weeks. Study three weeks of one and notice every phase begins with a condition, not a date.',
+          setup: 'Weeks 4 to 6 from a real market entry sequence. The dates are forecasts, the gates are law. Notice week 6 simply does not fire if the week 5 gate is not met.',
+          example: `LAUNCH SEQUENCE · WEEKS 4 TO 6 OF 8
+
+WEEK 4 · SUPPLY PUSH
+Enter only if: permit cleared (gate G1, week 1)
+Work: onboard 60 more hosts, verification SLA 48 hours,
+  GovShield review queue staffed daily
+Exit gate G2: 120 verified, listable units
+Trust risk this week: hosts onboarded faster than verification
+  can process, mitigation: cap onboarding to queue capacity,
+  a slow yes beats an unverified listing
+
+WEEK 5 · SOFT DEMAND
+Enter only if: G2 met (120 listings live)
+Work: organic and referral demand only, watch search to booking
+  conversion, seed 20 bookings with the partner network
+Exit gate G3: search returns 3 plus relevant results in every
+  launch district AND first 10 stays complete without a dispute
+Trust risk: a guest searches a district with 2 listings and
+  concludes the platform is empty, mitigation: launch districts
+  are gated individually, thin districts stay hidden
+
+WEEK 6 · PAID DEMAND
+Enter only if: G3 met. If not met, budget holds, week 6 becomes
+  a second supply week. The budget does not expire, trust does.`,
+          notes: [
+            'Every phase names its entry gate. The sequence self corrects when reality slips, which is the entire point of sequencing.',
+            'The listing floor counts verified units and the search experience is gated per district. Aggregate numbers hide the empty search that actually burns a guest.',
+            'Week 6 has a pre written miss path, the budget waits. Deciding that now costs nothing, deciding it in week 6 under spend pressure costs the launch.',
+          ],
+        },
         practice: {
           title: 'Sequence the Launch', mins: 45, difficulty: 'Advanced',
           brief: 'Use the prompt below to turn your constraints into a week by week launch sequence that seeds supply before demand.',
@@ -1759,6 +2895,44 @@ const DEPT_COURSES = {
           'One announcement, two audiences, no mixed signals: hosts hear safety and speed, investors hear verification and settlement.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Leading with excitement instead of standing: "we are thrilled to announce" spends the most read sentence on your feelings. In a trust market, the first sentence is the licence, the guarantee, or the number.',
+          'One message trying to hug two audiences: a paragraph that alternates host benefits and guest benefits reassures neither. One shared trust foundation, then a clean fork, hosts here, guests there.',
+          'Vague guarantees: "your money is protected" invites the question how. "Funds sit in regulated escrow until checkout day" answers it before it is asked.',
+        ],
+        worked: {
+          intro: 'A launch announcement in a trust market is closer to a bank notice than a party invitation. Study one that holds that discipline without going cold.',
+          setup: 'The full launch announcement, about 150 words, plus its one line social version. Count how early the licence appears and where the audiences fork.',
+          example: `LAUNCH ANNOUNCEMENT · MALDIVES
+
+InstaSpace is live in the Maldives, licensed under [authority,
+licence no.], with every listing verified and every payment held
+in regulated escrow.
+
+We built one thing: a stay you can trust from both sides.
+
+For hosts: your property earns without risk to it or to you.
+Guests are identity verified before they book, payouts land in
+your wallet the day a stay completes, and our team stands behind
+every settlement.
+
+For guests: every listing is checked, the host's right to rent
+is verified, and your money is not released until you have
+checked in. If a stay goes wrong, resolution is built into the
+platform, not a phone queue.
+
+The first fifty listings are live across three atolls. Both
+sides start here: [link]
+
+SOCIAL VERSION (one line)
+The Maldives, verified. Licensed, escrow protected stays are
+now live on InstaSpace.`,
+          notes: [
+            'The licence number appears in the first sentence. Nothing signals a trust product like leading with the thing that can be checked.',
+            'The fork is explicit, for hosts, for guests, and each side hears its own worry answered, not a generic benefit.',
+            'Fifty listings across three atolls is honest scale. Overclaiming inventory at launch is the mistake a trust brand never recovers from.',
+          ],
+        },
         practice: {
           title: 'Write the Launch Announcement', mins: 45, difficulty: 'Intermediate',
           brief: 'Use the prompt below to draft a Maldives launch announcement that leads with trust and speaks to both audiences.',
@@ -1786,6 +2960,45 @@ const DEPT_COURSES = {
           'Give each partner a reason and an easy yes: a clear mutual benefit and a low lift ask.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Ranking partners by size: the biggest resort chain gives you a meeting in six months. The mid size operator whose problem you solve this quarter gives you a pilot next week. Rank by fit and speed, reach comes third.',
+          'Asks that cost the partner effort: "promote us to your guests" is work. "Let us verify and list your overflow inventory, you keep the relationship" is relief. The best ask solves their problem, not yours.',
+          'Collecting logos instead of trust: a partnership that transfers no credibility to your listings is a press release, not a channel. Ask of every partner: does their name make a guest or host trust us more.',
+        ],
+        worked: {
+          intro: 'A partner map earns its place when each row explains what trust flows in which direction and why the partner says yes. Study two rows built that way.',
+          setup: 'Two entries from a Maldives partner shortlist, one obvious, one clever. Notice the mutual benefit is specific enough to open the first meeting with.',
+          example: `PARTNER MAP (two of ten)
+
+PARTNER: Mid size guesthouse association (40 member properties)
+Type: supply plus credibility
+Trust transfer: their members are locally known, their badge on
+  our listings tells guests these are real places, our
+  verification tells THEIR guests the association modernised
+Reach: modest, 40 properties
+The easy yes: we verify and list member properties free for six
+  months, the association gets a compliance dashboard it can
+  show the ministry. Their problem, proving members follow the
+  new rules, solved by our product doing what it already does.
+First meeting ask: pilot with five properties in one atoll
+Priority: Tier 1, speed and fit both high
+
+PARTNER: Regional airline loyalty programme
+Type: demand
+Trust transfer: their brand vouches for us at the exact moment,
+  post booking, when a traveller plans where to stay
+Reach: large
+The easy yes: verified stays as a redemption option, zero
+  integration work for them in phase one, a co branded landing
+  page we build
+First meeting ask: one email to their Maldives bound segment
+Priority: Tier 2, high value, slower legal, start now for Q4`,
+          notes: [
+            'The association ask converts our compliance machinery into their membership benefit. The strongest partnerships resell something you already built.',
+            'Trust transfer is written in both directions. Partnerships that only take credibility do not renew.',
+            'Each row ends with a first meeting ask small enough to get a yes in the room. A pilot of five beats a memorandum of anything.',
+          ],
+        },
         practice: {
           title: 'Build the Channel and Partner Map', mins: 45, difficulty: 'Intermediate',
           brief: 'Use the prompt below to map and rank the channels and partners for the Maldives entry.',
@@ -1813,6 +3026,48 @@ const DEPT_COURSES = {
           'It defines the go and no go gates: the conditions that must be true before each phase.',
         ],
         videoLabel: 'Capstone walkthrough',
+        mistakes: [
+          'An executive summary that hedges: leadership approves plans that make a clear recommendation and own its risks. "There are several considerations" is not a recommendation.',
+          'Gates without owners: a go no go gate that nobody is accountable for measuring will be waved through the week everyone is busy. Every gate names who calls it and on what evidence.',
+          'The plan hides its biggest risk: every launch plan has one assumption that, if wrong, sinks it. Naming it on page one is what separates a plan from a pitch.',
+        ],
+        worked: {
+          intro: 'An approval ready plan answers the three questions leadership actually asks: what are we betting, what kills us, and when can we stop. Study an opening page that answers all three.',
+          setup: 'The first page of a market launch plan as it went to a leadership meeting. The recommendation is unhedged, the kill risk is named, and the gates have owners.',
+          example: `MALDIVES MARKET LAUNCH PLAN · PAGE 1
+
+RECOMMENDATION
+Enter the Maldives in Q4 with a leasehold verified, escrow first
+model, gated on licensing (B1) closing by August 15. If B1 slips
+past September 1, we recommend deferring to Q1 rather than
+launching into peak season underprepared.
+
+THE BET IN ONE PARAGRAPH
+Trust is scarcer in this market than inventory. Guesthouses can
+not prove compliance and travellers cannot verify listings. We
+win by being the only platform where verification is the product,
+not a badge.
+
+THE ASSUMPTION THAT KILLS US IF WRONG
+That the regulator licenses a foreign platform holding escrow
+via a local partner. Counsel confirms or denies by August 1.
+Everything else in this plan is recoverable, this is not.
+
+THE GATES (owner · evidence · date)
+G1 Licence path confirmed     Talha  · counsel letter   · Aug 15
+G2 120 verified listings      Osman  · live count       · Oct 1
+G3 Districts search ready     Jybran · 3 results per district
+G4 Paid demand opens          Jybran · G3 plus 10 clean stays
+
+BUDGET EXPOSURE BEFORE EACH GATE
+Before G1: legal fees only. Before G2: onboarding team. The
+majority of spend sits behind G3, by design.`,
+          notes: [
+            'The recommendation includes its own stop condition, defer if B1 slips. Plans that can recommend stopping earn the right to recommend going.',
+            'The kill assumption is separated from ordinary risks. Leadership can hold one existential question in mind, not fourteen equal caveats.',
+            'Budget exposure is mapped to gates, so approving the plan does not mean spending the budget, it means releasing it gate by gate. That framing gets plans approved.',
+          ],
+        },
         practice: {
           title: 'Ship the Market Launch Plan', mins: 60, difficulty: 'Advanced', capstone: true,
           brief: 'This is your capstone. Use the prompt below to consolidate the week into a Maldives launch plan leadership can approve.',
@@ -1852,6 +3107,41 @@ const DEPT_COURSES = {
           'Quietly premium: restraint reads as expensive. Never hype, never clutter, and never use dashes as punctuation.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Rules that cannot fail a sentence: "be authentic" has never rejected a draft in history. A voice rule earns its place by being checkable, if you cannot point at a word that breaks it, it is a mood, not a rule.',
+          'Defining the voice only by what it is: without a banned list, every writer relitigates "seamless" from scratch. The do not side of the rules does more daily work than the do side.',
+          'Ten principles: nobody applies ten of anything under deadline. Three to five rules that are always true beat ten that are usually true.',
+        ],
+        worked: {
+          intro: 'Voice rules are a test suite for sentences. Study a rule written properly, with its test, its pass, and its fail, and hold your own rules to that shape.',
+          setup: 'One of four rules from the InstaSpace voice guide, complete with the one line test anyone can run. Notice the do and do not are real product sentences, not toy examples.',
+          example: `VOICE RULE 2 OF 4 · THE NUMBER CARRIES THE SENTENCE
+
+The rule: where a claim can be a number, it must be a number.
+Adjectives describing scale, speed, or cost are placeholders for
+research nobody did.
+
+DO   "Settlement lands in your wallet the day a stay completes."
+DO   "1.5 percent, published, all in."
+NOT  "Lightning fast payouts you can rely on."
+NOT  "Industry leading low fees."
+
+The test: cover every number in the sentence. If nothing concrete
+remains, the sentence was decoration.
+
+Banned words this rule retires: fast, affordable, seamless,
+instant (unless it is), competitive, market leading.
+
+Edge case ruling: "instant" is permitted only for the wallet
+balance display, which is actually instant. It is banned for
+settlement, which takes a day. Precision includes knowing your
+own product's clock.`,
+          notes: [
+            'The rule explains its own why, adjectives are unresearched claims. Rules with reasons survive the writer who disagrees.',
+            'The test is mechanical, cover the numbers. Anyone can run it on any sentence in five seconds, which is what makes the rule enforceable at scale.',
+            'The edge case ruling shows the rule meeting reality. A voice guide that has never ruled on a hard case has never been used.',
+          ],
+        },
         practice: {
           title: 'Write the Voice Rules', mins: 45, difficulty: 'Beginner',
           brief: 'Use the prompt below to turn the InstaSpace voice into a short, testable set of rules Claude and the team can follow.',
@@ -1879,6 +3169,45 @@ const DEPT_COURSES = {
           'Prefer the shorter version whenever the meaning survives.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Polishing instead of excavating: rearranging a hyped sentence produces polished hype. The edit starts by asking what is actually true underneath, then rebuilds from that.',
+          'Deleting the energy along with the hype: a rescued draft that reads like terms and conditions overcorrected. Calm is not flat, the certainty should still have a pulse.',
+          'Editing without showing the removals: a rewrite teaches nothing. The removed words list, with reasons, is what turns one edit into a lesson the next writer applies alone.',
+        ],
+        worked: {
+          intro: 'Watch a full rescue: loud draft in, on voice line out, with the excavation step in the middle that juniors skip.',
+          setup: 'A real style rescue of a partnerships email opener. The middle step, finding the true claim, is where the work happens. The rewrite is almost mechanical after it.',
+          example: `THE DRAFT (as received from the partnerships team)
+"We are beyond excited to unveil our game changing partnership
+that will revolutionize how travelers experience the Maldives
+like never before!!!"
+
+STEP 1 · EXCAVATE THE TRUE CLAIM
+Strip every adjective and ask what remains provable:
+- there is a partnership (with whom? the guesthouse association)
+- it changes something (what? 40 verified properties list at once)
+The true claim: forty verified guesthouses join the platform.
+
+STEP 2 · REBUILD FROM THE CLAIM
+"Forty guesthouses across three atolls, verified and live today.
+Our partnership with the Guesthouse Association makes InstaSpace
+the largest verified selection in the Maldives."
+
+REMOVED WORDS, WITH CHARGES
+beyond excited      our feelings, not their benefit
+game changing       claim with no evidence, banned list
+revolutionize       banned list
+like never before   unfalsifiable
+!!!                 the voice never shouts
+
+KEPT: nothing. When a sentence is all packaging, the rescue is
+a rebuild, and that is normal.`,
+          notes: [
+            'The excavation found a number, forty, hiding under the adjectives. There is almost always a number, and it is always more impressive than the hype was.',
+            'The rewrite leads with the concrete achievement and lets the partnership explain it. Order matters, proof then claim reads as confidence.',
+            'The removed words each carry a charge. An edit that can name why each word died is an edit the original writer accepts without a fight.',
+          ],
+        },
         practice: {
           title: 'Rescue an Off Voice Draft', mins: 45, difficulty: 'Intermediate',
           brief: 'Use the prompt below to pull a loud, padded draft back to a line that sounds like InstaSpace.',
@@ -1906,6 +3235,41 @@ const DEPT_COURSES = {
           'If a line would not sit in the deck, it does not sit in the app.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Changing the temperature per surface: writing the push notification "fun" and the deck "serious" splits the brand in two. The length changes, the format changes, the temperature never does.',
+          'Cutting the proof to fit: shrinking a message by dropping its number leaves the claim naked on the smallest, most seen surface. Shrink the words around the number, never the number.',
+          'Starting from the long version: compressing a deck slide into a notification produces a bruised summary. Write the shortest surface first, then let the longer ones earn their extra words with proof.',
+        ],
+        worked: {
+          intro: 'One message, four surfaces, one temperature. Study the set and notice the number survives every compression while everything else flexes.',
+          setup: 'The settlement message expressed across all four surfaces, written shortest first. Read them in a row and check the voice never wavers, only the depth.',
+          example: `THE CORE: verified settlement, 1.5 percent, two weeks not six.
+
+PUSH NOTIFICATION (one line)
+Your settlement cleared. 13 days, 1.5 percent, done.
+
+INSTAGRAM CAPTION (under 50 words)
+A cross border deal used to mean six weeks and 6.4 percent in
+fees you never itemised. On InstaSpace it means verified parties,
+regulated escrow, and settlement at 1.5 percent, in around two
+weeks. The fee schedule is public. Link in bio.
+
+LANDING PAGE HERO
+Headline: Two weeks. 1.5 percent. Every party verified.
+Subhead: InstaSpace settles cross border property deals through
+regulated escrow, at a published fee, in a fifth of the usual
+fee and a third of the usual time.
+
+INVESTOR DECK LINE
+Settlement is the wedge: 40 completed settlements averaging 13
+days at 1.5 percent all in, against a 6.4 percent market average,
+with zero disputes escalated beyond the platform.`,
+          notes: [
+            'The numbers appear on all four surfaces including the one line notification. Proof is the last thing to cut, not the first.',
+            'The deck line adds evidence the caption cannot carry, forty settlements, zero escalations, but it makes the same claim. Longer surfaces go deeper, never different.',
+            'The notification celebrates with a period, not an exclamation mark. Restraint at the moment of good news is the strongest voice signal a product sends.',
+          ],
+        },
         practice: {
           title: 'Carry One Message Across Surfaces', mins: 45, difficulty: 'Intermediate',
           brief: 'Use the prompt below to express one InstaSpace message across four surfaces without changing the voice.',
@@ -1933,6 +3297,41 @@ const DEPT_COURSES = {
           'Include the design rails that touch writing: Dubai and the Maldives only, no dashes, sentence case, no emoji.',
         ],
         videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Guidelines as an aspiration document: "we speak with warmth and authority" belongs in a pitch, not a guideline. Every line either changes what someone types or it is taking up the page.',
+          'Examples from other brands: a do and do not borrowed from famous companies teaches the reader about those companies. Every example comes from InstaSpace copy, real or realistic.',
+          'No pre ship checklist: guidelines get read once and forgotten. The checklist is the part that gets used every day, and it fits on a sticky note or it does not get used.',
+        ],
+        worked: {
+          intro: 'The pre ship checklist is the working end of any brand guideline. Study one that a whole team actually runs, and notice it takes under a minute per piece.',
+          setup: 'The final page of the InstaSpace guidelines, the checklist, plus one worked before and after that the guideline itself carries as teaching material.',
+          example: `BEFORE ANYTHING SHIPS · THE 60 SECOND CHECK
+
+1. Cover the numbers. Does anything concrete remain?
+   If not, the piece is packaging. Find the number.
+2. Read it aloud once. Did you shout anywhere?
+   Exclamation marks, ALL CAPS, "very", delete on sight.
+3. The two market rule: Dubai and the Maldives only.
+   Any other geography is a mistake or a leak.
+4. The dash sweep: no dashes as punctuation, commas or
+   periods. Middle dot is fine in labels.
+5. Would this sentence survive in the investor deck?
+   If it is too silly for the deck, it is too silly for
+   the app. One company, one voice.
+
+WORKED EXAMPLE THE GUIDELINE CARRIES
+Before: "Amazing news!! Your listing is now live and ready
+  to earn BIG!"
+After:  "Your listing is live. Verified, published, and
+  bookable from today."
+What changed and why: the checklist, lines 1, 2, and 5.
+The after version passes all five in one read.`,
+          notes: [
+            'Five checks, sixty seconds, no judgement calls. Checklists fail when any item needs a meeting to interpret.',
+            'Check 5 is the portable one, the deck test. It compresses the entire one voice principle into a question any intern can answer alone.',
+            'The guideline teaches with its own before and after, so reading it is itself a small training. Documents that demonstrate outlive documents that describe.',
+          ],
+        },
         practice: {
           title: 'Draft the Brand Guidelines', mins: 45, difficulty: 'Intermediate',
           brief: 'Use the prompt below to turn your voice rules and examples into a short, usable brand guidelines document.',
@@ -1960,6 +3359,51 @@ const DEPT_COURSES = {
           'It is versioned and maintained, so the voice holds as the company grows.',
         ],
         videoLabel: 'Capstone walkthrough',
+        mistakes: [
+          'A playbook without a paste ready prompt: the whole point of the playbook era is that anyone can ask Claude to edit to the voice. If the prompt is not in the playbook, verbatim, every writer improvises their own and the voice drifts.',
+          'No versioning: the voice will evolve, the Maldives launch alone will add rulings. A playbook without a version number and a change log becomes three conflicting PDFs by December.',
+          'Shipping without a first reader test: hand it to the newest person on the team and watch them edit one paragraph with it. Every place they hesitate is a bug in the playbook, not in them.',
+        ],
+        worked: {
+          intro: 'The paste ready prompt is the heart of a modern voice playbook, it turns every teammate into an on voice editor. Study one built to production standard.',
+          setup: 'The prompt section from a shipped playbook, the exact text anyone on the team pastes into Claude, followed by their own draft. Notice it carries the rules, the banned list, and the output format.',
+          example: `THE PLAYBOOK PROMPT (copy from here, paste before your draft)
+
+"You are the brand editor for InstaSpace, a trust platform for
+short term rentals in Dubai and the Maldives. Edit the draft
+below to our voice.
+
+The rules:
+1. Confident, not loud. No exclamation marks, no ALL CAPS.
+2. Where a claim can be a number, make it the number. If the
+   draft has no number, flag it, do not invent one.
+3. One reading only. If a sentence can be misread, rewrite it.
+4. Never use dashes as punctuation. Commas or periods.
+5. Markets are Dubai and the Maldives. Flag any other market.
+
+Banned words: revolutionary, seamless, game changer, unlock,
+empower, amazing, exciting, cutting edge, world class, instant
+(unless describing the wallet balance display).
+
+Return exactly:
+1. The edited version
+2. Removed words, each with a one line reason
+3. Any flags (missing numbers, wrong market, ambiguity)
+
+Do not change facts, prices, or dates. If a fact looks wrong,
+flag it, do not fix it.
+
+Draft follows:"
+
+PLAYBOOK METADATA
+Version 1.2 · July 2026 · Owner: brand · Changes from 1.1:
+added the "instant" edge case ruling, added market flag rule.`,
+          notes: [
+            'The prompt embeds the output format, edit, removals, flags, so every editing session doubles as voice training for the writer reading the removals.',
+            'The "do not change facts, flag them" line is what makes the prompt safe to hand to everyone. An editor that silently fixes prices is a liability, one that flags them is a colleague.',
+            'The metadata block makes the playbook a living document, versioned, owned, and changelogged like the product it protects.',
+          ],
+        },
         practice: {
           title: 'Ship the Brand Voice Playbook', mins: 60, difficulty: 'Advanced', capstone: true,
           brief: 'This is your capstone. Use the prompt below to consolidate the week into a brand voice playbook the whole company can use.',
@@ -1988,6 +3432,11 @@ Object.assign(window, { DEPARTMENTS, SPECIALTIES, SPECIALTY_BY_TRACK, COURSES, A
 // Optionally hydrate courses from Airtable when the backend has it configured.
 // Any failure (offline, not configured / 503, empty) leaves the built-in
 // courses above untouched, so the portal always has content to show.
+//
+// Airtable owns the words (titles, concepts, prompts). The presentation layer
+// enrichments live in this file and survive hydration: worked examples,
+// common mistakes, video urls, and each practice's records and chat script
+// are carried over from the built-in lesson when Airtable does not have them.
 window.loadAirtableCourses = async function(){
   try {
     const apiBase = (typeof window.PORTAL_API === 'string') ? window.PORTAL_API : 'http://localhost:3001';
@@ -1995,7 +3444,28 @@ window.loadAirtableCourses = async function(){
     if (!res.ok) return null;
     const data = await res.json();
     if (data && data.courses && Object.keys(data.courses).length){
-      Object.assign(window.COURSES, data.courses);
+      Object.keys(data.courses).forEach((deptId) => {
+        const incoming = data.courses[deptId];
+        const local = window.COURSES[deptId];
+        if (local && Array.isArray(incoming.lessons)){
+          const localById = {};
+          (local.lessons || []).forEach((l) => { localById[l.id] = l; });
+          incoming.lessons.forEach((lesson) => {
+            const base = localById[lesson.id];
+            if (!base) return;
+            if (!lesson.worked && base.worked) lesson.worked = base.worked;
+            if (!(lesson.mistakes && lesson.mistakes.length) && base.mistakes) lesson.mistakes = base.mistakes;
+            if (!lesson.videoUrl && base.videoUrl) lesson.videoUrl = base.videoUrl;
+            const basePractice = base.practice;
+            if (lesson.practice && basePractice){
+              if (!(lesson.practice.records && lesson.practice.records.length) && basePractice.records) lesson.practice.records = basePractice.records;
+              if (!lesson.practice.chatScript && basePractice.chatScript) lesson.practice.chatScript = basePractice.chatScript;
+              if (!lesson.practice.reward && basePractice.reward) lesson.practice.reward = basePractice.reward;
+            }
+          });
+        }
+        window.COURSES[deptId] = incoming;
+      });
       return data;
     }
   } catch (e) { /* keep built-in courses */ }
