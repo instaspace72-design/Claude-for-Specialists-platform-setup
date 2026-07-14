@@ -242,6 +242,209 @@ function CourseOverview({ course, dept, go, openLesson, pct }){
   );
 }
 
+/* ==== Stage based lesson (Read → Walkthrough → Worked example → Do it) ====
+   Used when a lesson carries a `worked` example. Old lessons without one
+   render the classic single scroll layout below, unchanged. */
+
+const STAGES = [
+  { id:'read',    n:'01', label:'Read',           hint:'The concept' },
+  { id:'watch',   n:'02', label:'Walkthrough',    hint:'See it move' },
+  { id:'worked',  n:'03', label:'Worked example', hint:'Study a pro version' },
+  { id:'do',      n:'04', label:'Do it',          hint:'Graded practice' },
+];
+
+function StageTabs({ stage, setStage, visited }){
+  return (
+    <div className="reveal" style={{ display:'flex', gap:8, marginBottom:26 }}>
+      {STAGES.map((s) => {
+        const on = stage === s.id;
+        const seen = visited.has(s.id);
+        return (
+          <button key={s.id} onClick={() => setStage(s.id)} style={{
+            flex:1, textAlign:'left', cursor:'pointer', padding:'12px 15px',
+            background: on ? 'var(--aubergine-lift)' : 'transparent',
+            border:`1px solid ${on ? 'var(--accent)' : seen ? 'rgba(245,239,232,.2)' : 'rgba(245,239,232,.1)'}`,
+            borderRadius:'var(--r-md)', transition:'all .18s var(--ease)',
+          }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <span className="mono" style={{ fontSize:11, fontWeight:700, color: on ? 'var(--accent)' : seen ? '#4fd18b' : 'rgba(245,239,232,.4)' }}>
+                {seen && !on ? '✓' : s.n}
+              </span>
+              <span style={{ fontWeight:700, fontSize:13.5, color: on ? 'var(--cream)' : 'rgba(245,239,232,.65)' }}>{s.label}</span>
+            </div>
+            <div className="c35" style={{ fontSize:11, marginTop:3, paddingLeft:19 }}>{s.hint}</div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function WorkedExample({ worked }){
+  const [revealed, setRevealed] = useState(false);
+  return (
+    <div>
+      <p className="c94 reveal" style={{ fontSize:16.5, lineHeight:1.6, fontWeight:500, marginTop:0 }}>{worked.intro}</p>
+      {worked.setup && (
+        <div className="surface reveal" style={{ padding:'16px 20px', marginTop:18, background:'var(--aubergine-deep)' }}>
+          <div className="eyebrow" style={{ marginBottom:8 }}>The setup</div>
+          <p className="c82" style={{ fontSize:14.5, lineHeight:1.55, fontWeight:500, margin:0 }}>{worked.setup}</p>
+        </div>
+      )}
+      <div className="reveal" style={{ marginTop:22 }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+          <div className="eyebrow" style={{ margin:0 }}>The professional version</div>
+          {!revealed && (
+            <button onClick={() => setRevealed(true)} className="btn btn-primary" style={{ padding:'8px 16px', fontSize:12 }}>
+              Attempt it first, then reveal
+            </button>
+          )}
+        </div>
+        <pre className="mono" style={{
+          margin:0, background:'var(--ground)', border:'1px solid rgba(245,239,232,.12)', borderRadius:'var(--r-md)',
+          padding:'18px 20px', fontSize:12.5, lineHeight:1.65, color:'rgba(245,239,232,.85)', whiteSpace:'pre-wrap',
+          maxHeight: revealed ? 520 : 120, overflowY:'auto', position:'relative',
+          filter: revealed ? 'none' : 'blur(5px)', userSelect: revealed ? 'auto' : 'none',
+          transition:'filter .3s var(--ease), max-height .3s var(--ease)',
+        }}>{worked.example}</pre>
+        {!revealed && (
+          <div className="mono c50" style={{ fontSize:11, letterSpacing:'.08em', textAlign:'center', marginTop:8 }}>
+            Blurred on purpose. Sketch your own version before you peek, the comparison is the lesson.
+          </div>
+        )}
+      </div>
+      {revealed && worked.notes && worked.notes.length > 0 && (
+        <div className="reveal" style={{ marginTop:22 }}>
+          <div className="eyebrow" style={{ marginBottom:12 }}>Why this version works</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+            {worked.notes.map((n, i) => (
+              <div key={i} className="surface" style={{ padding:'14px 18px', display:'flex', gap:13, alignItems:'flex-start' }}>
+                <span className="mono" style={{ color:'var(--accent)', fontSize:13, fontWeight:700, marginTop:1 }}>{String(i+1).padStart(2,'0')}</span>
+                <span className="c82" style={{ fontSize:14.5, fontWeight:500, lineHeight:1.5 }}>{n}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StagedLesson({ course, lesson, practice, startExercise, backToCourse }){
+  const [stage, setStage] = useState('read');
+  const [visited] = useState(() => new Set(['read']));
+  const [copied, setCopied] = useState(false);
+  const isCapstone = !!(practice && practice.capstone);
+  const goStage = (id) => { visited.add(id); setStage(id); };
+  const idx = STAGES.findIndex(s => s.id === stage);
+  const next = STAGES[idx + 1];
+  const copyPrompt = () => {
+    if (!practice || !practice.promptTemplate) return;
+    try { navigator.clipboard.writeText(practice.promptTemplate); setCopied(true); setTimeout(() => setCopied(false), 1600); } catch (e) { /* clipboard blocked */ }
+  };
+
+  return (
+    <div className="screen scroll" style={{ padding:'40px 52px', height:'100%' }}>
+      <div style={{ maxWidth:860, margin:'0 auto' }}>
+        <button className="reveal" onClick={backToCourse} style={{ background:'none', border:'none', cursor:'pointer',
+          color:'rgba(245,239,232,.6)', fontFamily:'var(--sans)', fontWeight:600, fontSize:14, display:'flex', alignItems:'center', gap:8, padding:0, marginBottom:18 }}>
+          <span style={{ fontSize:16 }}>←</span> {course.title}
+        </button>
+
+        <div className="eyebrow reveal">Lesson {String(lesson.n).padStart(2,'0')} · {lesson.difficulty} · {lesson.mins} min</div>
+        <h1 className="reveal" style={{ fontWeight:900, fontSize:36, letterSpacing:'-0.03em', margin:'8px 0 22px' }}>{lesson.title}</h1>
+
+        <StageTabs stage={stage} setStage={goStage} visited={visited} />
+
+        {stage === 'read' && (
+          <div key="read" className="screen" style={{ height:'auto' }}>
+            <p className="c94 reveal" style={{ fontSize:19, lineHeight:1.6, fontWeight:500, marginTop:0 }}>{lesson.concept}</p>
+            <div className="eyebrow reveal" style={{ margin:'26px 0 14px' }}>Key Concepts</div>
+            <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+              {lesson.keyConcepts.map((k,i) => (
+                <div key={i} className="surface" style={{ padding:'17px 21px', display:'flex', gap:15, alignItems:'flex-start' }}>
+                  <span className="mono" style={{ color:'var(--accent)', fontSize:13.5, fontWeight:700, marginTop:2 }}>{String(i+1).padStart(2,'0')}</span>
+                  <span className="c82" style={{ fontSize:15.5, fontWeight:500, lineHeight:1.5 }}>{k}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {stage === 'watch' && (
+          <div key="watch" className="screen" style={{ height:'auto' }}>
+            {lesson.videoUrl ? (
+              <div className="reveal" style={{ position:'relative', borderRadius:'var(--r-lg)', overflow:'hidden', aspectRatio:'16/9', background:'var(--aubergine-deep)', border:'1px solid rgba(245,239,232,.1)' }}>
+                <iframe src={lesson.videoUrl} title="Lesson walkthrough" allowFullScreen
+                  style={{ position:'absolute', inset:0, width:'100%', height:'100%', border:'none' }} />
+              </div>
+            ) : (
+              <LessonSlides lesson={lesson} track={course.dept} practice={practice} onStart={() => goStage('do')} />
+            )}
+            <p className="c50 reveal" style={{ fontSize:13.5, fontWeight:500, marginTop:14, lineHeight:1.5 }}>
+              {lesson.videoUrl ? 'A recorded walkthrough from your mentor.' : 'An animated pass over the key ideas. A recorded mentor walkthrough will land here when it is filmed.'}
+            </p>
+          </div>
+        )}
+
+        {stage === 'worked' && (
+          <div key="worked" className="screen" style={{ height:'auto' }}>
+            <WorkedExample worked={lesson.worked} />
+          </div>
+        )}
+
+        {stage === 'do' && practice && (
+          <div key="do" className="screen" style={{ height:'auto' }}>
+            {practice.promptTemplate && (
+              <React.Fragment>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
+                  <div className="eyebrow reveal" style={{ margin:0 }}>{isCapstone ? 'Capstone prompt' : "Today's Claude prompt"}</div>
+                  <button onClick={copyPrompt} className="mono" style={{ background:'none', border:'1px solid rgba(245,239,232,.18)', color:'rgba(245,239,232,.7)',
+                    borderRadius:'var(--r-pill)', padding:'6px 14px', fontSize:11, letterSpacing:'.08em', cursor:'pointer' }}>{copied ? 'COPIED' : 'COPY'}</button>
+                </div>
+                <pre className="mono reveal" style={{ margin:0, background:'var(--aubergine-deep)', border:'1px solid rgba(245,239,232,.1)', borderRadius:'var(--r-md)',
+                  padding:'18px 20px', fontSize:13, lineHeight:1.65, color:'rgba(245,239,232,.85)', whiteSpace:'pre-wrap', maxHeight:260, overflowY:'auto' }}>{practice.promptTemplate}</pre>
+              </React.Fragment>
+            )}
+            {practice.task && practice.task.length > 0 && (
+              <React.Fragment>
+                <div className="eyebrow reveal" style={{ margin:'24px 0 14px' }}>Your task</div>
+                <div style={{ display:'flex', flexDirection:'column', gap:11 }}>
+                  {practice.task.map((s, i) => (
+                    <div key={i} style={{ display:'flex', gap:14, alignItems:'flex-start' }}>
+                      <span style={{ width:25, height:25, borderRadius:'50%', flexShrink:0, background:'rgba(242,98,46,.16)', color:'var(--accent)',
+                        display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--mono)', fontSize:12, fontWeight:700, marginTop:1 }}>{i+1}</span>
+                      <span className="c82" style={{ fontSize:15.5, fontWeight:500, lineHeight:1.5 }}>{s}</span>
+                    </div>
+                  ))}
+                </div>
+              </React.Fragment>
+            )}
+            <div className="reveal" style={{ marginTop:28, position:'relative', borderRadius:'var(--r-lg)', overflow:'hidden',
+              background:'var(--accent-grad)', padding:'26px 28px', display:'flex', alignItems:'center', gap:20 }}>
+              <div style={{ flex:1 }}>
+                <div className="mono" style={{ fontSize:11, letterSpacing:'.16em', color:'rgba(42,18,64,.7)', fontWeight:700 }}>{isCapstone ? 'CAPSTONE · GRADED BY CLAUDE' : 'GRADED PRACTICE WITH CLAUDE'}</div>
+                <h3 style={{ fontWeight:900, fontSize:21, letterSpacing:'-0.02em', margin:'6px 0 4px', color:'var(--aubergine)' }}>{practice.title}</h3>
+                <p style={{ margin:0, color:'rgba(42,18,64,.8)', fontSize:14, fontWeight:600 }}>{practice.mins} min · strict grading, every criterion must pass</p>
+              </div>
+              <button className="btn" onClick={startExercise} style={{ background:'var(--aubergine)', color:'var(--cream)' }}>{isCapstone ? 'Start capstone' : 'Start exercise'} <span>→</span></button>
+            </div>
+          </div>
+        )}
+
+        {next && stage !== 'do' && (
+          <div className="reveal" style={{ display:'flex', justifyContent:'flex-end', marginTop:26 }}>
+            <button className="btn btn-ghost" onClick={() => goStage(next.id)} style={{ padding:'11px 22px', fontSize:14 }}>
+              Next · {next.label} <span style={{ fontSize:16 }}>→</span>
+            </button>
+          </div>
+        )}
+        <div style={{ height:36 }} />
+      </div>
+    </div>
+  );
+}
+
 function LessonView({ course, lesson, go, startExercise, backToCourse }){
   const [copied, setCopied] = useState(false);
   // A lesson's practice is either its own (intern courses) or the course level exercise.
@@ -251,6 +454,12 @@ function LessonView({ course, lesson, go, startExercise, backToCourse }){
     if (!practice || !practice.promptTemplate) return;
     try { navigator.clipboard.writeText(practice.promptTemplate); setCopied(true); setTimeout(() => setCopied(false), 1600); } catch (e) { /* clipboard blocked */ }
   };
+
+  // Lessons authored with a worked example use the staged Read → Walkthrough →
+  // Worked example → Do it experience. Older lessons keep the classic layout.
+  if (lesson.worked){
+    return <StagedLesson course={course} lesson={lesson} practice={practice} startExercise={startExercise} backToCourse={backToCourse} />;
+  }
 
   return (
     <div className="screen scroll" style={{ padding:'40px 52px', height:'100%' }}>

@@ -82,6 +82,8 @@ function Exercise({ course, lesson, practice, backToLesson, onComplete }){
   const [done, setDone] = useState(false);
   const [grading, setGrading] = useState(false);
   const [grade, setGrade] = useState(null);     // {passed, criteria:[{criterion,pass,reason}], feedback}
+  const [defenceUrl, setDefenceUrl] = useState('');
+  const isCapstone = !!(ex && ex.capstone);
   const historyRef = useRef([]);                // true API history: {role:'user'|'assistant', content}
   const scrollRef = useRef(null);
   const startedRef = useRef(false);
@@ -159,6 +161,7 @@ function Exercise({ course, lesson, practice, backToLesson, onComplete }){
             criteria: ex.success || [],
           },
           transcript: historyRef.current,
+          defenceUrl: isCapstone && defenceUrl.trim() ? defenceUrl.trim() : undefined,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -310,6 +313,16 @@ function Exercise({ course, lesson, practice, backToLesson, onComplete }){
               <div className="reveal" style={{ marginBottom:12, display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderRadius:'var(--r-md)', background:'rgba(245,239,232,.05)', border:'1px solid rgba(245,239,232,.14)' }}>
                 <span style={{ color:'var(--accent)', fontSize:16 }}>i</span>
                 <span className="c82" style={{ fontSize:13, fontWeight:600 }}>When you believe your work meets every success criterion, submit it for grading. Claude grades strictly.</span>
+              </div>
+            )}
+            {isCapstone && canSubmit && (
+              <div className="reveal" style={{ marginBottom:12, display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderRadius:'var(--r-md)', background:'var(--aubergine-deep)', border:'1px solid rgba(245,239,232,.12)' }}>
+                <span className="mono" style={{ color:'var(--accent)', fontSize:11, letterSpacing:'.1em', flexShrink:0 }}>DEFENCE</span>
+                <input
+                  type="url" value={defenceUrl} onChange={e => setDefenceUrl(e.target.value)}
+                  placeholder="Optional: record a 2 minute Loom defending your capstone, paste the link here"
+                  style={{ flex:1, background:'transparent', border:'none', outline:'none', color:'var(--cream)', fontSize:13, fontFamily:'var(--sans)' }}
+                />
               </div>
             )}
             {grade && !grade.passed && (

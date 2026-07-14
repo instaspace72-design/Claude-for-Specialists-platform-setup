@@ -1119,6 +1119,23 @@ const INTERN_COURSES = {
           'The trust surfaces (KYC/InstaPass, GovShield, disputes, AI-Auditor) are what separates InstaSpace from a plain listings site. Learn to spot them.',
         ],
         videoLabel: 'Lesson walkthrough',
+        worked: {
+          intro: 'Before you map the app yourself, study how a senior product person does it. The difference is never effort, it is structure: one row per surface, one job per row, and an improvement note specific enough to file as a ticket.',
+          setup: 'A senior PM toured the guest side for twenty minutes and produced the rows below. Notice that every row names a real surface, a single job, the trust module involved, and a could be better note that an engineer could act on tomorrow.',
+          example: `PRODUCT MAP · GUEST SIDE (excerpt)
+
+| Surface        | Audience | The one job it does            | Trust module        | Could be better                                      |
+| Search results | Guest    | Find a stay by area and dates  | AI-Auditor badges   | Filters reset after back navigation, guests re-enter dates |
+| Listing page   | Guest    | Decide and book one property   | GovShield badge     | Gallery loads all images at once, slow on 4G          |
+| Checkout       | Guest    | Pay in AED, card or wallet     | InstaWallet         | No line item price breakdown until the final step      |
+| Bookings list  | Guest    | Manage upcoming stays          | none                | Cancelled stays mix with upcoming, needs a filter      |
+| Dispute centre | Guest    | Escalate a stay gone wrong     | Disputes + wallet   | No indication of expected resolution time              |`,
+          notes: [
+            'Every "could be better" note names the surface, the symptom, and who it hurts. "Gallery is slow" would die in a backlog, "loads all images at once, slow on 4G" gets fixed.',
+            'The one job column is a single phrase. If you need "and" to describe a surface, you have found either two surfaces or a design problem, both worth noting.',
+            'Trust modules are named precisely (GovShield, not "verification stuff"). Leadership reads this map too, and precision is what makes it reusable.',
+          ],
+        },
         practice: {
           title: 'Map the InstaSpace Webapp', mins: 45, difficulty: 'Beginner',
           brief: 'Use the prompt below in your live Claude session to turn your first hands on tour of the app into a structured product map you and the team can reuse.',
@@ -1147,6 +1164,32 @@ const INTERN_COURSES = {
           'A dispute is a booking that ended sideways. The resolution centre must produce a real wallet refund, not just a status change.',
         ],
         videoLabel: 'Lesson walkthrough',
+        worked: {
+          intro: 'A money flow test sheet lives or dies on the observed result column. Anyone can write what should happen. A tester writes down what actually happened, and scores the gap.',
+          setup: 'A QA engineer walked one booking end to end and logged every step as JSON. Study the third row: the expected and observed results differ, so it carries a severity and a one line fix idea. That row is the whole craft.',
+          example: `MONEY FLOW TEST SHEET (three rows of twelve)
+
+{"step":"Guest pays at checkout","actor":"guest",
+ "expected":"AED total charged once, booking confirmed, funds held in escrow",
+ "observed":"Charged once, booking confirmed, escrow status shown as HELD",
+ "severity":null,"fix":null}
+
+{"step":"Stay completes","actor":"system",
+ "expected":"Booking flips to completed within the hour after checkout time",
+ "observed":"Flipped to completed as expected",
+ "severity":null,"fix":null}
+
+{"step":"Host payout lands","actor":"host",
+ "expected":"Payout appears in InstaWallet with the booking reference attached",
+ "observed":"Payout arrived but shows no booking reference, host cannot tell which stay paid",
+ "severity":"major",
+ "fix":"Attach booking id to the wallet transaction record and show it in the payout row"}`,
+          notes: [
+            'Rows where expected equals observed carry null severity. Do not invent problems, a clean pass is real information too.',
+            'The failing row names who it hurts (the host cannot reconcile) and a fix scoped to one change. That is a ticket, not a complaint.',
+            'Severity words are fixed: blocker, major, minor. A shared vocabulary is what lets leadership rank fifty findings in one pass.',
+          ],
+        },
         practice: {
           title: 'Run the End to End Money Flow', mins: 45, difficulty: 'Intermediate',
           brief: 'Use the prompt below to convert your live walkthrough into a step by step flow document, with an expected result for every step and a note wherever the app surprised you.',
@@ -1175,6 +1218,35 @@ const INTERN_COURSES = {
           'Auth uses scrypt hashed passwords and bearer tokens in SQLite. First login forces a password change. Interns land on a specialty track, leadership lands on the overview.',
         ],
         videoLabel: 'Lesson walkthrough',
+        worked: {
+          intro: 'An architecture note is judged by one test: can a new intern read it in ten minutes and not ask you anything obvious afterwards. Study the excerpt below, then hold your own note to the same bar.',
+          setup: 'This is the opening of a real one page architecture note for this portal, written for someone joining next month. Notice it explains in plain sentences, names exact files, and never assumes the reader knows the stack.',
+          example: `HOW THE LEARNING PORTAL WORKS (excerpt)
+
+The portal is two programs. A tiny static server (frontend/serve.js) hands
+the browser index.html on port 8000, and an Express API (backend/server.js)
+answers on port 3001. In production one Node service does both jobs.
+
+The frontend has no build step. index.html loads React and Babel from a CDN,
+then loads each portal/*.jsx file as a script that Babel compiles in the
+browser. Every file shares one global scope, which is why components hang
+off window instead of using imports.
+
+When you sign in, the API checks your password against a salted scrypt hash
+in SQLite and hands back a bearer token. The frontend keeps it in
+localStorage and sends it on every request. Your track (for example
+webapp-portal) picks which course object from data.jsx becomes your world.
+
+Three files to read first:
+1. frontend/portal/app.jsx, the routing brain, every screen hangs off it
+2. frontend/portal/data.jsx, every course, lesson, and exercise as data
+3. backend/server.js, every endpoint, table, and the Claude proxies`,
+          notes: [
+            'Every paragraph answers one question a newcomer would actually ask, in the order they would ask them: what runs, how does it load, how do I get in.',
+            'File paths are exact and the reading list is ranked with a reason. "Look at the code" is not an onboarding doc.',
+            'No jargon without a payoff. "Babel compiles in the browser" is immediately followed by the consequence that matters, one shared global scope.',
+          ],
+        },
         practice: {
           title: 'Reverse Engineer the Portal', mins: 45, difficulty: 'Intermediate',
           brief: 'Use the prompt below to turn a walk through the portal codebase into a plain English architecture note a new hire could read in ten minutes.',
@@ -1203,6 +1275,34 @@ const INTERN_COURSES = {
           'A test without an expected result is a note, not a test, and a test without an observed result has not run yet.',
         ],
         videoLabel: 'Lesson walkthrough',
+        worked: {
+          intro: 'A test case is a contract: given this setup, when I do these steps, exactly this must happen. Study the three cases below, one happy path, one edge, one that crosses products, then write yours to the same shape.',
+          setup: 'Three cases from a real cross product suite. Notice the precondition (the world before the test), numbered steps a stranger could follow, one unambiguous expected result, and honest priority. The money touching case is P1 by rule, not by mood.',
+          example: `CROSS PRODUCT TEST SUITE (three cases of twenty)
+
+{"id":"WA-BOOK-01","actor":"guest","product":"webapp","surface":"checkout",
+ "precondition":"Signed in guest, listing available for the chosen dates",
+ "steps":["Pick two nights next month","Enter two guests","Pay with a valid card"],
+ "expected":"Booking confirmed, AED total matches the listing price times nights plus fees, escrow shows HELD",
+ "priority":"P1","is_edge":false}
+
+{"id":"WA-BOOK-07","actor":"guest","product":"webapp","surface":"checkout",
+ "precondition":"Two signed in guests, the SAME last available room in separate browsers",
+ "steps":["Both reach payment for identical dates","Both confirm within five seconds"],
+ "expected":"Exactly one booking succeeds, the other gets a clear availability error and no charge",
+ "priority":"P1","is_edge":true}
+
+{"id":"PT-EX-03","actor":"intern learner","product":"portal","surface":"exercise chat",
+ "precondition":"Intern signed in, exercise open, two chat turns sent",
+ "steps":["Type only the word ok","Press Submit for grading"],
+ "expected":"Grader fails the submission with per criterion reasons, lesson does NOT advance",
+ "priority":"P2","is_edge":true}`,
+          notes: [
+            'The precondition is what most beginners skip and it is why their bugs cannot be reproduced. State the world before step one.',
+            'WA-BOOK-07 is the race condition, the last room double booking. Edges like this are where real products break, one happy path plus nine edges is the right ratio.',
+            'PT-EX-03 tests this portal itself, and its expected result is that lazy work FAILS. Testing that the system rejects bad input matters as much as accepting good input.',
+          ],
+        },
         practice: {
           title: 'Build the Cross Product Test Suite', mins: 45, difficulty: 'Intermediate',
           brief: 'Use the prompt below to convert everything from day 1 to 3 into a structured test suite Claude can help you keep consistent.',
@@ -1231,6 +1331,38 @@ const INTERN_COURSES = {
           'A thirty day fix plan groups fixes into week one (blockers), week two (majors), weeks three and four (polish and prevention).',
         ],
         videoLabel: 'Capstone walkthrough',
+        worked: {
+          intro: 'Leadership reads the first six lines of a report and decides whether to read the rest. Study how this executive summary earns the next page, then hold your capstone to it.',
+          setup: 'The opening of a product report the CEO actually acted on. Three risks, each in plain English, each with the evidence and the cost of ignoring it. No table yet, no jargon, no throat clearing.',
+          example: `INSTASPACE PRODUCT REPORT (executive summary excerpt)
+
+The three risks that matter this week:
+
+1. Hosts cannot reconcile payouts. Wallet transactions arrive without a
+   booking reference, so a host with five stays cannot tell which one paid.
+   Every support ticket this causes erodes the exact trust we sell.
+   Fix is one field on the transaction record. Week one.
+
+2. The last room can double book. Two guests confirming the same final
+   night within seconds both succeed in testing. One of them arrives to an
+   occupied apartment. This is a refund, a review, and a story they tell.
+   Needs a availability lock at payment. Week one.
+
+3. New PM imports fail silently on bad rows. A property manager importing
+   forty listings loses three to formatting errors with no message saying
+   which three or why. They discover it when a guest asks about a missing
+   unit. Week two.
+
+Everything else found this week is ranked in the table below. None of it
+is a launch blocker. The thirty day plan puts the two week one items first
+because both touch money and trust, the two things we cannot ask anyone to
+be patient about.`,
+          notes: [
+            'Each risk is a story with a victim, not a bug id. "A host with five stays cannot tell which one paid" makes an executive feel the problem in one sentence.',
+            'Every risk ends with the size of the fix and a week. A risk without a next step is anxiety, a risk with one is a plan.',
+            'The summary tells leadership what is NOT urgent too. Saying "none of it is a launch blocker" is what makes the two week one calls credible.',
+          ],
+        },
         practice: {
           title: 'Ship the InstaSpace Product Report', mins: 60, difficulty: 'Advanced', capstone: true,
           brief: 'This is your capstone. Use the prompt below to consolidate the week into one report Talha can hand to the CEO on Monday.',

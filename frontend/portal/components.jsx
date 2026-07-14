@@ -102,6 +102,7 @@ function CountUp({ to, dur = 900, suffix = '' }){
 const NAV = [
   { id:'dashboard', label:'Dashboard', icon:'▦' },
   { id:'course', label:'My Course', icon:'▤' },
+  { id:'portfolio', label:'Portfolio', icon:'▣' },
   { id:'progress', label:'Progress', icon:'◈' },
 ];
 

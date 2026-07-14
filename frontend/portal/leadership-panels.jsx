@@ -471,9 +471,40 @@ function PerformanceReport({ intern, onClose }){
               <div style={{ display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:12, marginBottom:24 }}>
                 <ProgressTile label="Course completion" value={`${data.progress.completion || 0}%`} />
                 <ProgressTile label="Exercises passed"  value={data.progress.exercisesPassed || 0} />
-                <ProgressTile label="Current streak"    value={`${data.progress.streak || 0}d`} />
+                <ProgressTile label="Artefacts"         value={(data.artefacts || []).length} />
                 <ProgressTile label="Leaders rating"    value={data.leaderRatings.length} />
               </div>
+
+              {/* Portfolio evidence */}
+              {(data.artefacts || []).length > 0 && (
+                <React.Fragment>
+                  <h4 style={{ fontWeight:800, fontSize:16, letterSpacing:'-0.01em', margin:'0 0 12px' }}>Portfolio artefacts</h4>
+                  <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:24 }}>
+                    {data.artefacts.map((a) => (
+                      <div key={a.id} style={{ display:'flex', justifyContent:'space-between', gap:12, fontSize:13, padding:'8px 12px',
+                        border:'1px solid rgba(42,18,64,.12)', borderRadius:8, background:'rgba(42,18,64,.03)' }}>
+                        <span style={{ fontWeight:700 }}>{a.name}</span>
+                        <span className="mono" style={{ fontSize:11, color:'rgba(42,18,64,.55)', flexShrink:0 }}>
+                          {a.exercise_id || ''} · {String(a.created_at || '').slice(0, 10)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </React.Fragment>
+              )}
+              {(data.defences || []).length > 0 && (
+                <React.Fragment>
+                  <h4 style={{ fontWeight:800, fontSize:16, letterSpacing:'-0.01em', margin:'0 0 12px' }}>Capstone defence recordings</h4>
+                  <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:24 }}>
+                    {data.defences.map((d, i) => (
+                      <div key={i} style={{ fontSize:13, padding:'8px 12px', border:'1px solid rgba(42,18,64,.12)', borderRadius:8, background:'rgba(42,18,64,.03)' }}>
+                        <span style={{ fontWeight:700 }}>{d.exercise_id}</span>{' · '}
+                        <a href={d.defence_url} target="_blank" rel="noopener noreferrer" style={{ color:'var(--crimson)', fontWeight:600, wordBreak:'break-all' }}>{d.defence_url}</a>
+                      </div>
+                    ))}
+                  </div>
+                </React.Fragment>
+              )}
 
               {/* KPI bars */}
               <h4 style={{ fontWeight:800, fontSize:16, letterSpacing:'-0.01em', margin:'0 0 14px' }}>Team average · KPIs</h4>

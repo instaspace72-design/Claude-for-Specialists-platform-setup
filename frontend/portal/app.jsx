@@ -253,6 +253,7 @@ function App(){
         {screen === 'course' && <CourseOverview key="c" course={course} dept={dept} go={go} openLesson={openLesson} pct={pct} />}
         {screen === 'lesson' && <LessonView key={"l"+lessonId} course={course} lesson={lesson} go={go} startExercise={startExercise} backToCourse={() => setScreen('course')} />}
         {screen === 'exercise' && <Exercise key={"e"+(lesson && lesson.id)} course={course} lesson={lesson} practice={activePractice} backToLesson={() => setScreen('lesson')} onComplete={completeExercise} />}
+        {screen === 'portfolio' && <Portfolio key="pf" />}
         {screen === 'progress' && <Progress key="p" course={course} pct={pct} streak={streak} exercisesPassed={exercisesPassed} minutes={minutes} activeDays={activeDays} onViewCertificate={() => setCertificateOpen(true)} />}
       </main>
       <PortalTweaks t={t} setTweak={setTweak} />

@@ -180,6 +180,7 @@ db.serialize(() => {
   // column" errors on databases that already have them).
   db.run(`ALTER TABLE exercise_submissions ADD COLUMN grade_json TEXT`, () => {});
   db.run(`ALTER TABLE exercise_submissions ADD COLUMN feedback TEXT`, () => {});
+  db.run(`ALTER TABLE exercise_submissions ADD COLUMN defence_url TEXT`, () => {});
 
   // Ground truth documents injected into mentor and grader prompts.
   // Seeded from config/*.md on every boot, so a redeploy updates them.
@@ -1088,7 +1089,7 @@ async function runGrader(context, transcript) {
 }
 
 app.post('/api/grade', requireAuth, async (req, res) => {
-  const { exerciseId, context = {}, transcript = [] } = req.body || {};
+  const { exerciseId, context = {}, transcript = [], defenceUrl } = req.body || {};
   const criteria = Array.isArray(context.criteria) ? context.criteria.filter(Boolean) : [];
   if (!exerciseId || !criteria.length || !Array.isArray(transcript) || !transcript.length) {
     return res.status(400).json({ error: 'exerciseId, context.criteria, and transcript are required' });
@@ -1099,12 +1100,21 @@ app.post('/api/grade', requireAuth, async (req, res) => {
       hint: 'Set CLAUDE_API_KEY in .env, then restart. Exercises cannot be passed without a real grade.',
     });
   }
+  // Optional capstone defence recording (Loom or similar). Kept only when it
+  // looks like a real link.
+  let defence = null;
+  if (defenceUrl) {
+    try {
+      const u = new URL(String(defenceUrl).trim());
+      if (u.protocol === 'http:' || u.protocol === 'https:') defence = u.toString().slice(0, 500);
+    } catch (e) { /* not a URL, drop it */ }
+  }
   try {
     const grade = await runGrader(context, transcript);
     const learnerWork = transcript.filter((m) => m.role === 'user').map((m) => m.content).join('\n\n');
     await dbRun(
-      'INSERT INTO exercise_submissions (student_id, exercise_id, content, passed, grade_json, feedback) VALUES (?,?,?,?,?,?)',
-      [req.user.email, String(exerciseId), learnerWork, grade.passed ? 1 : 0, JSON.stringify(grade.criteria), grade.feedback]
+      'INSERT INTO exercise_submissions (student_id, exercise_id, content, passed, grade_json, feedback, defence_url) VALUES (?,?,?,?,?,?,?)',
+      [req.user.email, String(exerciseId), learnerWork, grade.passed ? 1 : 0, JSON.stringify(grade.criteria), grade.feedback, defence]
     );
     res.json(grade);
   } catch (err) {
@@ -1302,8 +1312,12 @@ app.get('/api/leadership/report/:internEmail', requireAuth, requireLeadership, (
                      WHERE n.intern_email = ?
                      ORDER BY n.created_at DESC`,
                   [email],
-                  (e4, notes) => {
+                  async (e4, notes) => {
                     if (e3 || e4) return res.status(500).json({ error: (e3 || e4).message });
+                    const [artefacts, defences] = await Promise.all([
+                      dbAll('SELECT id, name, exercise_id, length(body) AS chars, created_at FROM artefacts WHERE student_id = ? ORDER BY created_at DESC LIMIT 10', [email]).catch(() => []),
+                      dbAll('SELECT exercise_id, defence_url, submitted_at FROM exercise_submissions WHERE student_id = ? AND defence_url IS NOT NULL ORDER BY submitted_at DESC LIMIT 5', [email]).catch(() => []),
+                    ]);
                     const kpi = {};
                     KPI_FIELDS.forEach((f) => {
                       const vals = (ratings || []).map((r) => r[f]).filter((v) => Number.isFinite(v));
@@ -1359,6 +1373,8 @@ app.get('/api/leadership/report/:internEmail', requireAuth, requireLeadership, (
                             updatedAt: r.updated_at,
                           })),
                           notes: notes || [],
+                          artefacts,
+                          defences,
                           isStar,
                         });
                       }
