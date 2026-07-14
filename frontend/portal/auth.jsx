@@ -198,6 +198,7 @@ const INTERN_ROSTER = [
   { name:'Shahzaib Nasir', title:'Design & Video',         badge:'SN' },
   { name:'Umair Aziz',     title:'InstaSpace App Mastery', badge:'UA' },
   { name:'Abdullah',       title:'InstaSpace App Mastery', badge:'AB' },
+  { name:'Hamza Butt',     title:'LinkedIn Marketing',     badge:'HB' },
 ];
 
 function LeadershipLanding({ user, onLogout }){

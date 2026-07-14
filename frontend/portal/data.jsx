@@ -40,6 +40,7 @@ const SPECIALTIES = [
   { id:'qa-nocode',      name:'QA & No-code',        badge:'QA', tagline:'Break it before a guest does.',          blurb:'Think in test cases, generate a full suite with Claude, and wire no-code alerts that catch bugs early.' },
   { id:'qa-seo',         name:'QA & SEO',            badge:'QS', tagline:'Quality on the page and in the code.',    blurb:'Audit a listing for bugs and search gaps in one pass, then turn findings into a roadmap.' },
   { id:'webapp-portal',  name:'InstaSpace App Mastery', badge:'WP', tagline:'Know the product cold, teach it back.',   blurb:'Master the InstaSpace webapp and the Learning Portal itself: surfaces, flows, roles, and the QA that keeps them honest.' },
+  { id:'linkedin',       name:'LinkedIn Marketing',     badge:'LI', tagline:'Turn a feed into a pipeline.',            blurb:'Master LinkedIn for B2B growth: the algorithm, a personal brand, content that converts, and lead generation that fills the InstaSpace pipeline.' },
 ];
 const SPECIALTY_BY_TRACK = SPECIALTIES.reduce((m, s) => { m[s.id] = s; return m; }, {});
 
@@ -2053,6 +2054,351 @@ be patient about.`,
             'A recommendation on the single next thing to build',
           ],
           reward: { badge: 'Product Report Author', note: 'You shipped a Product Report leadership can act on this week. That is the kind of work that turns an intern into a specialist.' },
+        },
+      },
+    ],
+  },
+  linkedin: {
+    id: 'LNKD001', dept: 'linkedin', title: 'LinkedIn Marketing Mastery', level: 'Intermediate', days: 5, instructor: 'Sanwa Ali',
+    summary: 'Master LinkedIn for B2B real estate growth: read the algorithm, build a personal brand, write posts that convert, generate leads, and ship a 90 day LinkedIn strategy that feeds the InstaSpace pipeline.',
+    objectives: [
+      'Understand the LinkedIn algorithm and position InstaSpace against the competition',
+      'Build a personal brand and write posts that earn engagement from investors',
+      'Generate B2B leads and ship a 90 day strategy leadership can execute',
+    ],
+    lessons: [
+      {
+        id: 'LNKD001L01', n: 1, title: 'LinkedIn Strategy for B2B Real Estate', mins: 120, difficulty: 'Intermediate', status: 'active',
+        concept: 'LinkedIn is where InstaSpace’s buyers already are: investors, brokers, and property professionals scrolling between meetings. But the feed is an algorithm, not a noticeboard. Day one is learning what the algorithm actually rewards, who exactly we are trying to reach, and where the competition leaves a gap wide enough to own.',
+        keyConcepts: [
+          'The algorithm rewards conversation, not broadcasting: comments weigh more than likes, the first 90 minutes decide reach, and external links get suppressed. Write to start replies, not to collect applause.',
+          'Audience personas before content: a Dubai portfolio investor, a first time cross border buyer, and a property manager scroll the same feed for completely different reasons. Each persona gets its own content angle.',
+          'Competitive gap analysis: ten competitors are already posting. The win is not posting more, it is finding the topics they avoid, real fee numbers, regulation explained plainly, and owning them.',
+          'Content pillars: five recurring themes (trust and verification, cross border costs, market insight, behind the scenes, client stories) so every post strengthens a position instead of floating alone.',
+        ],
+        videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Posting into the void: writing for everyone on LinkedIn reaches no one. A post aimed at "people interested in real estate" loses to one aimed at "the investor who just lost 6 percent on a cross border deal".',
+          'Treating likes as the metric: a post with 200 likes from other marketers is worth less than one with 9 comments from property investors. Optimise for the conversation, the algorithm and the pipeline both follow it.',
+          'Copying the competition: analysing competitors to imitate them hands them the agenda. The analysis exists to find what they are NOT saying.',
+        ],
+        worked: {
+          intro: 'Study how a senior B2B marketer turns algorithm knowledge into a positioning decision. The output is not a summary of how LinkedIn works, it is a defensible choice about where to play.',
+          setup: 'The positioning section from a real strategy foundation. Notice it names the gap with evidence, picks personas with reasons, and commits to pillars the competition cannot copy without changing their business.',
+          example: `LINKEDIN STRATEGY FOUNDATION (positioning excerpt)
+
+THE GAP, WITH EVIDENCE
+Reviewed 10 competitor pages posting on UAE real estate. 8 of 10
+post listings and market hype. 0 of 10 publish actual fee numbers
+or explain DLD regulation in plain words. The trust and cost
+conversation is empty, and it is the only conversation InstaSpace
+can win by default, our product IS the answer.
+
+PRIMARY PERSONAS (3)
+P1 Cross border investor, 35 to 55, has done 1+ deal, remembers
+   the fees. Content angle: name the numbers nobody itemises.
+P2 First time international buyer, research mode, afraid of
+   being cheated. Angle: explain the process like a friend.
+P3 Property manager or broker, potential partner. Angle: show
+   the platform working, payouts landing, disputes resolving.
+
+CONTENT PILLARS (5, with target mix)
+30% Trust and verification stories   20% Cross border cost math
+20% UAE and Maldives market insight  15% Behind the scenes
+15% Client and partner stories
+
+POSITIONING SENTENCE
+The only voice on UAE property LinkedIn that shows you the real
+numbers and the real rules, because our product survives both.`,
+          notes: [
+            'The gap claim is counted, 8 of 10, 0 of 10, not felt. A gap you can count is a gap you can defend in a strategy review.',
+            'Each persona carries its content angle in the same breath. Personas without angles are decoration.',
+            'The pillar mix adds to 100 percent, which forces the real decision, what we will NOT post about.',
+          ],
+        },
+        practice: {
+          title: 'Algorithm Mastery and Competitive Gap Analysis', mins: 45, difficulty: 'Intermediate',
+          brief: 'Two exercises in one session: first decode what the LinkedIn algorithm rewards, then analyse the competitive landscape and claim the gap InstaSpace can own.',
+          promptTemplate: 'You are a B2B LinkedIn strategist helping InstaSpace, a short term rental trust platform for the UAE and Maldives, build its LinkedIn presence for B2B real estate audiences.\n\nPart 1, the algorithm: explain what the LinkedIn algorithm rewards in 2026, comment weight versus likes, dwell time, the first 90 minutes, external link suppression, and what that means practically for a company like ours.\n\nPart 2, the landscape: I will list competitor pages I reviewed and what they post. Help me build a competitive matrix: what topics they cover, what they all avoid, and where InstaSpace can own a gap. Then help me define 3 audience personas (cross border investor, first time buyer, property manager or partner) each with a content angle, and 5 content pillars with a percentage mix.\n\nEnd with a one sentence positioning statement for the InstaSpace LinkedIn voice. Ask me for my competitor observations first.',
+          task: [
+            'Run the prompt and work through the algorithm mechanics with your mentor',
+            'Review 10 competitor LinkedIn pages and feed your observations in',
+            'Build the competitive matrix and name the gap with counted evidence',
+            'Define 3 personas with angles, 5 pillars with a mix, and the positioning sentence',
+          ],
+          success: [
+            'A clear explanation of what the algorithm rewards and what that changes',
+            'A competitive gap named with counted evidence from 10 real pages',
+            'Three personas with content angles, five pillars with a percentage mix, and one positioning sentence',
+          ],
+          reward: { badge: 'Feed Strategist', note: 'You turned the algorithm and ten competitor pages into a positioning InstaSpace can own. That is strategy, not posting.' },
+        },
+      },
+      {
+        id: 'LNKD001L02', n: 2, title: 'Personal Brand and Thought Leadership', mins: 120, difficulty: 'Intermediate', status: 'locked',
+        concept: 'People buy from people on LinkedIn. A company page gets a fraction of the reach a credible personal profile gets. Day two builds your profile into a landing page for the InstaSpace story: a headline that says who you help, an about section that earns trust, and a thought leadership position you can hold for ninety days without running dry.',
+        keyConcepts: [
+          'The profile is a landing page: the headline says who you help and how, the banner carries the one number, the about section is written for the visitor, not the mirror.',
+          'Thought leadership is a position, not a mood: pick the one conversation you will be known for, cross border property costs, and return to it until people bring it to you.',
+          'The 3 month content calendar: a position only compounds with rhythm. Map the pillars onto a weekly cadence you can actually sustain alongside the rest of the job.',
+        ],
+        videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'A headline that is a job title: "Marketing Specialist at InstaSpace" tells a visitor nothing. "I show international investors the real cost of a cross border deal" starts a conversation before the first message.',
+          'An about section about yourself: nobody reads three paragraphs of your journey. The visitor is asking one question, what do you know that helps me, answer it in the first two lines.',
+          'A calendar you cannot keep: five posts a week for two weeks then silence reads worse than two posts a week for ninety days. Cadence is a promise, size it honestly.',
+        ],
+        worked: {
+          intro: 'Study a profile rewrite from job title to landing page. Every line is doing work: the headline filters, the about converts, the featured section proves.',
+          setup: 'A before and after of the profile pieces that matter. The after version is written for the persona from day one, the cross border investor who remembers the fees.',
+          example: `PROFILE REWRITE
+
+HEADLINE
+Before: LinkedIn Marketing Specialist at InstaSpace
+After:  I show property investors the real cost of cross border
+        deals, and how verified escrow cuts it to 1.5 percent
+
+ABOUT (first lines, the only ones shown before "see more")
+Before: "Passionate marketer with a growth mindset and a love
+        for connecting people..."
+After:  "An international buyer loses 4 to 6 percent of every
+        cross border property deal to fees most people never
+        itemise. I write about where that money goes, and how
+        verification and escrow get most of it back."
+
+FEATURED SECTION (3 slots)
+1. The fee breakdown post (the pillar piece, pinned)
+2. InstaSpace verify page for a live listing (proof the product
+   exists and works)
+3. The 90 day market insight report (the capstone, when it ships)
+
+THOUGHT LEADERSHIP POSITION (one sentence)
+The person who publishes the numbers the cross border property
+industry prefers to keep vague.`,
+          notes: [
+            'The headline makes a claim a visitor can disagree with, which is exactly what makes it a filter. Job titles filter nobody.',
+            'The about opens with the reader’s problem and a number, not the writer’s passion. Two lines is all you get before "see more" hides the rest.',
+            'The featured slots are sequenced: hook, proof, depth. A profile is a funnel and this is its order.',
+          ],
+        },
+        practice: {
+          title: 'Profile Optimization and Positioning', mins: 45, difficulty: 'Intermediate',
+          brief: 'Rebuild your LinkedIn profile as a landing page for the InstaSpace story, then lock your thought leadership position and the three month calendar that sustains it.',
+          promptTemplate: 'You are a LinkedIn personal brand strategist. Help me rebuild my profile as a landing page for the InstaSpace story, trust and verified settlement for cross border real estate in the UAE and Maldives.\n\nWork through with me, one piece at a time:\n1. A headline that names who I help and how, with a number if possible, not my job title\n2. The first two lines of my about section, opening with the reader’s problem\n3. The full about section, under 150 words, ending with one clear way to engage\n4. Three featured section slots in funnel order: hook, proof, depth\n5. My thought leadership position in one sentence, the conversation I will own\n6. A 3 month content calendar: my five pillars mapped to a realistic weekly cadence\n\nAsk me about my background and the persona I chose on day one before drafting. Keep everything free of hype and dashes.',
+          task: [
+            'Run the prompt and answer the background questions honestly',
+            'Draft and refine the headline, about, and featured slots',
+            'Lock your one sentence thought leadership position',
+            'Build the 3 month calendar at a cadence you can actually keep',
+          ],
+          success: [
+            'A headline that filters for the target persona, not a job title',
+            'An about section that opens with the reader’s problem and a number',
+            'A one sentence position and a 3 month calendar with a sustainable cadence',
+          ],
+          reward: { badge: 'Brand Builder', note: 'Your profile now works while you sleep, a landing page with a position, not a CV with a photo.' },
+        },
+      },
+      {
+        id: 'LNKD001L03', n: 3, title: 'Content Creation and Posting Strategy', mins: 120, difficulty: 'Intermediate', status: 'locked',
+        concept: 'A LinkedIn post is a tiny machine: the first two lines earn the click on "see more", the middle earns the read, and the last line earns the comment. Day three is the copywriting craft, hooks, structure, rhythm, and a production workflow that turns one insight into a week of posts without burning out.',
+        keyConcepts: [
+          'The hook is 90 percent of the post: the first two lines appear in the feed, everything else hides behind "see more". A number, a contradiction, or a story opening, never a warm up.',
+          'Structure for the skimmer: short lines, one idea per line, white space as punctuation, and a comment provoking question or claim at the end.',
+          'The production workflow: one pillar insight becomes a story post, a number post, a how to post, and a question post. Batch on one day, schedule across the week, engage in the first 90 minutes after posting.',
+        ],
+        videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Burying the hook: opening with "I have been thinking a lot lately about..." wastes the only two lines the feed shows. Start with the number or the tension, warm ups are for drafts.',
+          'Posting and ghosting: the algorithm reads the first 90 minutes. Publishing then disappearing kills the post you spent an hour writing. Post when you can stay to answer comments.',
+          'Writing every post from scratch: pros batch. One insight, four formats, one writing session. Blank page energy is the main reason content calendars die in week three.',
+        ],
+        worked: {
+          intro: 'Study one post built with the full craft: the hook, the skimmer structure, and the comment bait ending, plus how the same insight becomes three more posts.',
+          setup: 'A real style post for the cost pillar aimed at persona P1, plus the batching plan that turns its insight into a week. Read the post as it would appear in the feed, first two lines only, and ask if you would tap.',
+          example: `THE POST (cost pillar, persona P1)
+
+A client almost wired 38,000 dollars to nobody last month.
+Here is where cross border property money actually goes.
+
+Bank FX margin: 1.2 to 2.1 percent, never itemised.
+Correspondent fees: 3 to 5 intermediaries, each takes a cut.
+Legal duplication: two jurisdictions, twice the paperwork.
+Time: six weeks average, and time is a fee too.
+
+Total: 4 to 6 percent of the deal. On a 2M AED apartment,
+that is a car, gone, in fees most buyers never see listed.
+
+We built InstaSpace to publish these numbers instead of
+hiding them. Verified escrow, 1.5 percent, all in.
+
+What is the worst hidden fee you have seen on a deal?
+
+THE BATCH (same insight, three more posts)
+Story post: the client who almost wired 38k to a fake account
+How to post: 5 questions to ask before any cross border wire
+Question post: poll, which fee surprised you most on your last deal`,
+          notes: [
+            'The hook is a story number, 38,000 dollars to nobody, not a topic announcement. Feeds reward specifics that create questions.',
+            'Every line under the hook is one idea and under 12 words. Skimmers read shapes before they read sentences.',
+            'The ending question is answerable in one line, which is what makes people actually answer it. The comments are the reach.',
+          ],
+        },
+        practice: {
+          title: 'Copywriting Mastery and Production Workflow', mins: 45, difficulty: 'Intermediate',
+          brief: 'Write high engagement posts with real copywriting craft, then build the batching workflow that produces twenty posts without twenty writing sessions.',
+          promptTemplate: 'You are a LinkedIn copywriting coach for InstaSpace, trust and verified settlement for cross border real estate.\n\nPart 1, the craft: teach me the anatomy of a high engagement B2B post, the two line hook, skimmer structure, and the comment earning ending. Then coach me line by line as I draft one post for my cost pillar aimed at the cross border investor persona. Push back on weak hooks.\n\nPart 2, the workflow: take the insight from my post and help me batch it into three more formats, a story post, a how to post, and a question post. Then help me design a weekly production workflow: batch day, posting schedule, and the first 90 minutes engagement routine.\n\nBy the end I want 4 finished posts and a documented workflow. Ask me for my pillar insight first. No hype words, no dashes.',
+          task: [
+            'Run the prompt and draft your first post with line by line coaching',
+            'Batch the same insight into three more formats',
+            'Document the weekly workflow: batch day, schedule, engagement routine',
+            'Finish with 4 posts ready to publish and the workflow written down',
+          ],
+          success: [
+            'A post whose first two lines would stop the scroll on their own',
+            'The same insight turned into four different post formats',
+            'A documented weekly workflow with a batch day and an engagement routine',
+          ],
+          reward: { badge: 'Scroll Stopper', note: 'You can now turn one insight into a week of posts that earn comments, not just impressions. That is a content engine.' },
+        },
+      },
+      {
+        id: 'LNKD001L04', n: 4, title: 'Lead Generation and Sales Integration', mins: 120, difficulty: 'Advanced', status: 'locked',
+        concept: 'Content builds the audience, outreach converts it. Day four is the unglamorous half of LinkedIn marketing: finding the right hundred people, connecting without being deleted on sight, and walking a warm reply to a booked meeting. This is where the feed becomes pipeline, and where most marketers quietly fail.',
+        keyConcepts: [
+          'Lead generation is list building first: define the ideal profile (title, geography, activity signals), build a list of 100, and qualify before you connect. Spray and pray burns the account.',
+          'The connection request is not the pitch: a two line note referencing something true about them converts at 3 to 4 times a blank or salesy request. The pitch comes three messages later, if at all.',
+          'The sales playbook: connection, value message, conversation, soft offer, booked call. Each step has a template, a timing rule, and an exit rule for people who are not interested.',
+        ],
+        videoLabel: 'Lesson walkthrough',
+        mistakes: [
+          'Pitching in the connection request: nothing gets a request declined faster. The request earns the connection, the relationship earns the pitch, in that order, always.',
+          'No exit rule: following up forever with silent prospects poisons your sender reputation and your soul. Two follow ups, then a graceful close, then back to content where they still see you.',
+          'Measuring sends instead of meetings: 200 connection requests is activity. 4 booked calls is a result. The playbook is judged at the bottom of the funnel, not the top.',
+        ],
+        worked: {
+          intro: 'Study a connection to meeting sequence that actually books calls, notice how late the ask arrives and how each message gives before it takes.',
+          setup: 'The message sequence from a working B2B playbook, aimed at a Dubai property manager persona. Four touches, one ask, and an exit rule that keeps the relationship alive even on no.',
+          example: `CONNECTION TO MEETING SEQUENCE
+
+TOUCH 1 · Connection request (day 0)
+"Saw your comment on the DLD permit changes, your point about
+renewal timing matched what our host data shows. Connecting to
+follow your take on the market."
+(References something TRUE and specific. No pitch. 22 words.)
+
+TOUCH 2 · Value message (day 3, after accept)
+"Thanks for connecting. That permit conversation prompted us to
+pull the numbers, hosts lose an average of 11 booked nights to
+permit delays. Full chart here if useful, no strings: [link]"
+(Gives the asset. Asks for nothing.)
+
+TOUCH 3 · Conversation (only if they engage)
+Respond to whatever they said. Human, no template. The goal is
+one genuine exchange about their situation.
+
+TOUCH 4 · The soft offer (day 10 to 14, only after a real reply)
+"Given what you said about payout delays, worth 15 minutes to
+show you how settlement works on our side? If not, no problem,
+the content keeps coming either way."
+
+EXIT RULE
+No reply after touch 2 plus one nudge: stop. They stay in the
+audience, the content keeps working, the door stays open.
+MEASURE: meetings booked per 100 connections. Target: 4 to 6.`,
+          notes: [
+            'The ask arrives on touch 4, after value and a real exchange. Every earlier ask converts worse and burns more.',
+            'The exit rule protects the long game, a prospect who says nothing this quarter reads your posts for the next one. Pushiness forfeits that.',
+            'The target is honest, 4 to 6 meetings per 100 connections. Playbooks promising 30 percent are lying to someone, usually their author.',
+          ],
+        },
+        practice: {
+          title: 'Lead Generation Strategy and Sales Playbook', mins: 45, difficulty: 'Advanced',
+          brief: 'Build the lead generation system: the ideal profile, the list building method, and the full connection to meeting playbook with templates and exit rules.',
+          promptTemplate: 'You are a B2B lead generation strategist for InstaSpace, trust and verified settlement for cross border real estate in the UAE and Maldives.\n\nHelp me build a complete LinkedIn lead generation playbook:\n1. Ideal customer profiles: define 2, a cross border property investor and a Dubai property manager or broker, each with title keywords, geography, and activity signals that mark them as warm\n2. List building: a repeatable method to find and qualify 100 prospects per month without tools we cannot afford\n3. The message sequence: connection request (2 lines, references something true), value message (gives an asset), conversation guidance, and the soft offer, each with timing rules\n4. Exit rules: when to stop and how to close gracefully\n5. Measurement: the funnel from connections to meetings with honest conversion targets\n\nDraft every template with me and pressure test the sequence against the question, would I delete this if I received it. No hype, no dashes.',
+          task: [
+            'Define both ideal profiles with concrete signals',
+            'Document the list building method for 100 prospects a month',
+            'Draft all four touch templates and the exit rule',
+            'Set the funnel targets: connections, replies, conversations, meetings',
+          ],
+          success: [
+            'Two ideal profiles with activity signals, not just job titles',
+            'A four touch sequence where the ask arrives only after value and a real reply',
+            'An exit rule and honest funnel targets measured in meetings, not sends',
+          ],
+          reward: { badge: 'Pipeline Builder', note: 'You built the machine that turns an audience into booked meetings without burning the audience. That is the half of LinkedIn most marketers never learn.' },
+        },
+      },
+      {
+        id: 'LNKD001L05', n: 5, title: 'Capstone: 90 Day LinkedIn Marketing Strategy', mins: 120, difficulty: 'Advanced', status: 'locked',
+        concept: 'Day five assembles everything into the document this course exists to produce: a 90 day LinkedIn marketing strategy for InstaSpace that leadership can approve and you can execute starting Monday. Positioning, profile, content engine, lead generation, and a measurement framework, one plan, with the first two weeks scheduled to the day.',
+        keyConcepts: [
+          'A 90 day strategy is three 30 day chapters: month one builds the foundation and rhythm, month two scales what the data says works, month three converts, the lead engine at full speed.',
+          'The first two weeks are scheduled to the day: which post, which pillar, which outreach batch. Everything after week two is planned by rhythm, not by date, so the plan survives contact with reality.',
+          'Measurement that leadership reads: followers are vanity, the report tracks engaged persona accounts, conversations started, meetings booked, and pipeline value attributed to LinkedIn.',
+        ],
+        videoLabel: 'Capstone walkthrough',
+        mistakes: [
+          'A strategy that is a content calendar: 90 days of post ideas with no lead generation, no measurement, and no monthly gates is a publishing schedule wearing a strategy costume.',
+          'Planning day 90 as precisely as day 1: you cannot know what works yet. Schedule two weeks, define the monthly review gates, and let the data schedule the rest.',
+          'No kill criteria: a pillar that produces nothing for 30 days gets replaced, an outreach sequence below 2 meetings per 100 gets rewritten. Strategies without kill rules run bad plays for a quarter.',
+        ],
+        worked: {
+          intro: 'Study the skeleton of a 90 day strategy that got approved and executed, notice the monthly gates, the honest targets, and how little is scheduled past week two.',
+          setup: 'The one page summary from the front of a real 90 day LinkedIn strategy. Leadership read this page, the other nineteen were evidence.',
+          example: `90 DAY LINKEDIN STRATEGY · ONE PAGE SUMMARY
+
+THE BET
+The cross border cost conversation on UAE property LinkedIn is
+empty. We own it with published numbers, a credible personal
+voice, and an outreach engine that converts readers to meetings.
+
+MONTH 1 · FOUNDATION (posts 3x week, outreach 25 connects/week)
+Gate at day 30: 2 pillars showing engagement from target
+personas, 15 real conversations started, profile conversion
+visible. Below gate: swap weakest pillar, hold outreach volume.
+
+MONTH 2 · SCALE (posts 4x week, outreach 50 connects/week)
+Double down on the top 2 pillars by persona engagement, launch
+the partner persona sequence. Gate at day 60: 6 meetings booked
+cumulative, 1 piece of pipeline attributed.
+
+MONTH 3 · CONVERT (rhythm holds, focus shifts to pipeline)
+Case study content from month 1 and 2 wins, capstone report
+published as the featured asset. Day 90 review: full funnel
+numbers to leadership with the next quarter recommendation.
+
+TARGETS (honest, from the playbook benchmarks)
+Meetings booked: 12 to 18 over the quarter
+Pipeline attributed: 2 to 4 opportunities
+Engaged persona accounts: 150+
+KILL RULES: any pillar with zero persona engagement for 30 days
+is replaced. Any sequence under 2 meetings per 100 is rewritten.
+
+WEEKS 1 AND 2: scheduled to the day in appendix A.`,
+          notes: [
+            'The bet is one paragraph and it is the same bet from day one of the course. A strategy that cannot state its bet in three sentences does not have one.',
+            'Each month ends with a gate and a below gate action. The strategy self corrects on schedule instead of at the post mortem.',
+            'Targets come as ranges from playbook benchmarks, not round numbers from hope. Leadership funds ranges they believe over promises they discount.',
+          ],
+        },
+        practice: {
+          title: 'Ship the 90 Day LinkedIn Strategy', mins: 60, difficulty: 'Advanced', capstone: true,
+          brief: 'This is your capstone. Consolidate the week, positioning, profile, content engine, and lead playbook, into a 90 day strategy leadership can approve, with the first two weeks scheduled to the day.',
+          promptTemplate: 'I have completed four days of LinkedIn marketing work for InstaSpace: a positioning and competitive gap analysis, an optimised profile with a thought leadership position, a content production workflow with finished posts, and a lead generation playbook with message templates.\n\nHelp me consolidate everything into a 90 Day LinkedIn Marketing Strategy document with:\n1. A one page summary: the bet, three monthly chapters with gates, honest targets, and kill rules\n2. Month by month plans: month 1 foundation, month 2 scale, month 3 convert, each with posting cadence, outreach volume, and a day 30, 60, 90 gate with below gate actions\n3. The first two weeks scheduled to the day: which post, which pillar, which outreach batch\n4. A measurement framework leadership will actually read: engaged persona accounts, conversations, meetings booked, pipeline attributed\n5. The 20 post starter bank organised by pillar\n\nHold me to honest targets from the playbook benchmarks. This goes to Sanwa and leadership for approval, so it must be executable from Monday morning. No hype, no dashes.',
+          task: [
+            'Run the capstone prompt and assemble all four days of work',
+            'Write the one page summary with gates, targets, and kill rules',
+            'Schedule weeks one and two to the day',
+            'Ship the strategy for leadership approval and mark the course complete',
+          ],
+          success: [
+            'A one page summary stating the bet, three monthly gates, and kill rules',
+            'The first two weeks scheduled to the day, the rest planned by rhythm',
+            'A measurement framework tracking meetings and pipeline, not vanity metrics',
+          ],
+          reward: { badge: 'Strategy Shipper', note: 'You shipped a 90 day strategy with gates, kill rules, and honest targets. That is the difference between posting on LinkedIn and running LinkedIn as a channel.' },
         },
       },
     ],

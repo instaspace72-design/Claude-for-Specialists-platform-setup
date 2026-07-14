@@ -33,10 +33,15 @@ const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY || '';
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || '';
 const CLAUDE_API_KEY = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY || '';
 const CLAUDE_MODEL = process.env.CLAUDE_MODEL || 'claude-sonnet-5';
+// Free fallback provider: Google Gemini (aistudio.google.com, free tier, no card).
+// Claude is always preferred when its key is present.
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
 
 const isPlaceholder = (v) => !v || /XXXX|YOUR_|placeholder/i.test(v);
 const airtableReady = !isPlaceholder(AIRTABLE_API_KEY) && !isPlaceholder(AIRTABLE_BASE_ID);
 const claudeReady = !isPlaceholder(CLAUDE_API_KEY);
+const geminiReady = !isPlaceholder(GEMINI_API_KEY);
 
 // ---------------------------------------------------------------------------
 // Clients (created lazily so bad/placeholder keys never crash boot)
@@ -61,6 +66,52 @@ if (claudeReady) {
     anthropic = null;
   }
 }
+
+// Which brain is on. Claude when its key exists, else Gemini free tier, else none.
+const aiProvider = () => (anthropic ? 'claude' : geminiReady ? 'gemini' : 'none');
+
+// Plain REST call to Gemini, no SDK needed. Free tier friendly.
+async function geminiGenerate(system, messages, maxTokens) {
+  const contents = messages.map((m) => ({
+    role: m.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: typeof m.content === 'string' ? m.content : JSON.stringify(m.content) }],
+  }));
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      system_instruction: { parts: [{ text: system || '' }] },
+      contents,
+      generationConfig: { maxOutputTokens: maxTokens },
+    }),
+  });
+  if (!resp.ok) {
+    const detail = (await resp.text()).slice(0, 300);
+    const hint = resp.status === 429 ? ' (free tier rate limit, wait a minute and try again)' : '';
+    throw new Error(`Gemini ${resp.status}${hint}: ${detail}`);
+  }
+  const data = await resp.json();
+  const parts = (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) || [];
+  const text = parts.map((p) => p.text || '').join('\n').trim();
+  if (!text) throw new Error('Gemini returned an empty response');
+  return text;
+}
+
+// One text generation door for every feature. Model override only applies to
+// Claude; Gemini always uses GEMINI_MODEL.
+async function generateText({ system, messages, maxTokens = 1024, model }) {
+  if (anthropic) {
+    const r = await anthropic.messages.create({ model: model || CLAUDE_MODEL, max_tokens: maxTokens, system, messages });
+    return r.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n');
+  }
+  if (geminiReady) return geminiGenerate(system, messages, maxTokens);
+  const err = new Error('No AI provider configured');
+  err.code = 'NO_PROVIDER';
+  throw err;
+}
+
+const NO_PROVIDER_HINT = 'Set CLAUDE_API_KEY in .env, or set GEMINI_API_KEY for the free tier (aistudio.google.com), then restart.';
 
 // ---------------------------------------------------------------------------
 // SQLite (local progress + chat history)
@@ -277,6 +328,7 @@ const SEED_USERS = [
   { email: 'shahzaib@myinstaspace.com', name: 'Shahzaib Nasir', first: 'Shahzaib', role: 'intern',     title: 'Design & Video',          track: 'design' },
   { email: 'umair@myinstaspace.com',    name: 'Umair Aziz',    first: 'Umair',    role: 'intern',     title: 'InstaSpace App Mastery',  track: 'webapp-portal' },
   { email: 'abdullah@myinstaspace.com', name: 'Abdullah',      first: 'Abdullah', role: 'intern',     title: 'InstaSpace App Mastery',  track: 'webapp-portal' },
+  { email: 'hamza@myinstaspace.com',    name: 'Hamza Butt',    first: 'Hamza',    role: 'intern',     title: 'LinkedIn Marketing Specialist', track: 'linkedin' },
   { email: 'osman@myinstaspace.com',    name: 'Osman',         first: 'Osman',    role: 'leadership', title: 'CEO',                     track: null },
   { email: 'jybran@myinstaspace.com',   name: 'Jybran',        first: 'Jybran',   role: 'leadership', title: 'COO',                     track: null },
   { email: 'talha@myinstaspace.com',    name: 'Talha',         first: 'Talha',    role: 'leadership', title: 'CPO',                     track: null },
@@ -467,7 +519,10 @@ app.get('/api/health', (req, res) => {
     env: NODE_ENV,
     airtable: airtableReady ? 'configured' : 'not_configured',
     claude: claudeReady ? 'configured' : 'not_configured',
+    gemini: geminiReady ? 'configured' : 'not_configured',
+    aiProvider: aiProvider(),
     model: CLAUDE_MODEL,
+    geminiModel: GEMINI_MODEL,
     mentorModel: MENTOR_MODEL,
     graderModel: GRADER_MODEL,
   });
@@ -757,19 +812,37 @@ app.post('/api/chat', requireAuth, async (req, res) => {
   if (!Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: 'messages must be a non-empty array' });
   }
-  if (!anthropic) {
+  if (aiProvider() === 'none') {
     return res.status(503).json({
-      error: 'Claude is not configured',
-      hint: 'Set CLAUDE_API_KEY in .env, then restart. The portal falls back to its scripted mentor.',
+      error: 'No AI provider is configured',
+      hint: NO_PROVIDER_HINT + ' The portal falls back to its scripted mentor.',
     });
   }
 
   try {
-    const systemPrompt = exercise ? await buildMentorSystem(req.user, exercise) : (system ||
+    let systemPrompt = exercise ? await buildMentorSystem(req.user, exercise) : (system ||
       'You are a warm, precise mentor inside the InstaSpace "Claude for Specialists" learning portal. Guide the learner with short, concrete steps. Never use dashes as punctuation.');
 
     const convo = messages.map((m) => ({ role: m.role, content: m.content }));
     const toolEvents = [];
+
+    // Free tier path: same mentor brain, no tool loop. Coaching, product
+    // knowledge, and learner history all still apply; grading happens on
+    // submit as always.
+    if (!anthropic) {
+      systemPrompt += '\n\nNote: your tools (fetch_url, check_criteria, save_artefact) are unavailable in this session. Never claim to have checked criteria or saved anything. When the learner asks if they are ready, walk the rubric with them line by line and tell them to press Submit for the real grade.';
+      const text = await generateText({ system: systemPrompt, messages: convo, maxTokens: 1024 });
+      const last = messages[messages.length - 1];
+      db.run('INSERT INTO chat_history (student_id, exercise_id, role, content) VALUES (?,?,?,?)', [
+        req.user.email, exerciseId || null, last.role,
+        typeof last.content === 'string' ? last.content : JSON.stringify(last.content),
+      ]);
+      db.run('INSERT INTO chat_history (student_id, exercise_id, role, content) VALUES (?,?,?,?)', [
+        req.user.email, exerciseId || null, 'assistant', text,
+      ]);
+      return res.json({ role: 'assistant', text, toolEvents, provider: 'gemini' });
+    }
+
     let response = null;
 
     for (let step = 0; step < 5; step++) {
@@ -872,8 +945,8 @@ app.get('/api/career/kit', requireAuth, async (req, res) => {
 });
 
 app.post('/api/career/kit', requireAuth, async (req, res) => {
-  if (!anthropic) {
-    return res.status(503).json({ error: 'Claude is not configured', hint: 'Set CLAUDE_API_KEY in .env, then restart.' });
+  if (aiProvider() === 'none') {
+    return res.status(503).json({ error: 'No AI provider is configured', hint: NO_PROVIDER_HINT });
   }
   try {
     const email = req.user.email;
@@ -900,16 +973,15 @@ app.post('/api/career/kit', requireAuth, async (req, res) => {
       ...artefacts.map((a) => `- ${a.name}: ${String(a.excerpt || '').replace(/\s+/g, ' ').slice(0, 250)}`),
     ].join('\n');
 
-    const response = await anthropic.messages.create({
+    const text = await generateText({
       model: GRADER_MODEL,
-      max_tokens: 1800,
+      maxTokens: 1800,
       system: `You turn a junior specialist's REAL training record into career materials. Strict rules: never invent experience, numbers, tools, or outcomes that are not in the record. Ground every bullet in the actual artefacts and graded work. Write plainly and confidently, no hype words, never dashes as punctuation. The reader is a hiring manager at a serious company.
 
 Return ONLY valid JSON, exactly this shape:
 {"cv_bullets":["4 to 6 achievement bullets for a CV, each starting with a strong verb"],"linkedin_summary":"a first person 80 to 120 word summary","talking_points":["5 short interview talking points, each naming a real artefact or graded exercise and what it proves"]}`,
       messages: [{ role: 'user', content: record }],
     });
-    const text = response.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n');
     const kit = extractJson(text);
     if (!kit || !Array.isArray(kit.cv_bullets)) {
       return res.status(502).json({ error: 'Generator returned an unreadable result. Try again.' });
@@ -1252,13 +1324,12 @@ async function runGrader(context, transcript) {
 
   let result = null;
   for (let attempt = 0; attempt < 2 && !result; attempt++) {
-    const response = await anthropic.messages.create({
+    const text = await generateText({
       model: GRADER_MODEL,
-      max_tokens: 1400,
+      maxTokens: 1400,
       system: GRADER_SYSTEM,
       messages: [{ role: 'user', content: attempt === 0 ? userMsg : userMsg + '\n\nReturn ONLY the JSON object, nothing else.' }],
     });
-    const text = response.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n');
     result = extractJson(text);
   }
   if (!result || !Array.isArray(result.criteria)) {
@@ -1281,10 +1352,10 @@ app.post('/api/grade', requireAuth, async (req, res) => {
   if (!exerciseId || !criteria.length || !Array.isArray(transcript) || !transcript.length) {
     return res.status(400).json({ error: 'exerciseId, context.criteria, and transcript are required' });
   }
-  if (!anthropic) {
+  if (aiProvider() === 'none') {
     return res.status(503).json({
-      error: 'Grading needs Claude connected',
-      hint: 'Set CLAUDE_API_KEY in .env, then restart. Exercises cannot be passed without a real grade.',
+      error: 'Grading needs an AI provider connected',
+      hint: NO_PROVIDER_HINT + ' Exercises cannot be passed without a real grade.',
     });
   }
   // Optional capstone defence recording (Loom or similar). Kept only when it

@@ -461,11 +461,14 @@ const ART_BY_LESSON = {
   // Brand
   BRD001L01:'voice',    BRD001L02:'rewrite',  BRD001L03:'voice',
   BRD001L04:'checks',   BRD001L05:'house',
+  // LinkedIn Marketing Mastery
+  LNKD001L01:'search',  LNKD001L02:'voice',   LNKD001L03:'calendar',
+  LNKD001L04:'funnel',  LNKD001L05:'report',
 };
 
 /* Animated, interactive lesson slides (replaces the old video placeholder). */
 function LessonSlides({ lesson, track, practice, onStart }){
-  const trackFallback = ({ seo:'links', design:'palette', 'qa-nocode':'checks', 'qa-seo':'checks', 'webapp-portal':'checks' })[track] || 'rings';
+  const trackFallback = ({ seo:'links', design:'palette', 'qa-nocode':'checks', 'qa-seo':'checks', 'webapp-portal':'checks', linkedin:'links' })[track] || 'rings';
   const variant = ART_BY_LESSON[lesson.id] || trackFallback;
   const concepts = lesson.keyConcepts || [];
   const mistakes = lesson.mistakes || [];
